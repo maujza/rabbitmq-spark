@@ -1,6 +1,5 @@
 package com.github.maujza;
 
-import static java.util.Arrays.asList;
 import com.github.maujza.read.RabbitMQScanBuilder;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
 import org.apache.spark.sql.connector.catalog.Table;
@@ -56,7 +55,7 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new RabbitMQScanBuilder();
+        return new RabbitMQScanBuilder(schema);
     }
 
     @Override
