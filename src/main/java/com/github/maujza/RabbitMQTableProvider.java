@@ -12,12 +12,12 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 public final class RabbitMQTableProvider implements TableProvider, DataSourceRegister {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap caseInsensitiveStringMap) {
-        return null;
+        throw new UnsupportedOperationException("Schema inference is not supported.");
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] transforms, Map<String, String> map) {
-        return new RabbitMQTable();
+        return new RabbitMQTable(schema, transforms, map);
     }
 
     @Override

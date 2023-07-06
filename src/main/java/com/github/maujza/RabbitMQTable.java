@@ -5,26 +5,48 @@ import com.github.maujza.read.RabbitMQScanBuilder;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableCapability;
+import org.apache.spark.sql.connector.expressions.Transform;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class RabbitMQTable implements Table, SupportsRead {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQTable.class);
-    private static final Set<TableCapability> TABLE_CAPABILITY_SET = new HashSet<>(asList(TableCapability.CONTINUOUS_READ));
+    private static final Set<TableCapability> TABLE_CAPABILITY_SET = new HashSet<>(List.of(TableCapability.CONTINUOUS_READ));
+    private final StructType schema;
+    private final Transform[] partitioning;
+    private final Map<String, String> rabbitMQConfig;
+
+    RabbitMQTable(
+            final StructType schema, final Transform[] partitioning, final Map<String, String> rabbitMQConfig) {
+        LOGGER.info("Creating RabbitMQTable");
+        this.schema = schema;
+        this.partitioning = partitioning;
+        this.rabbitMQConfig = rabbitMQConfig;
+    }
+
     @Override
     public String name() {
         return null;
     }
 
     @Override
+    public Transform[] partitioning() {
+        return partitioning;
+    }
+
+    @Override
+    public Map<String, String> properties() {
+        return rabbitMQConfig;
+    }
+
+    @Override
     public StructType schema() {
-        return null;
+        return schema;
     }
 
     @Override
@@ -35,5 +57,26 @@ public class RabbitMQTable implements Table, SupportsRead {
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
         return new RabbitMQScanBuilder();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final RabbitMQTable that = (RabbitMQTable) o;
+        return Objects.equals(schema, that.schema)
+                && Arrays.equals(partitioning, that.partitioning)
+                && Objects.equals(rabbitMQConfig, that.rabbitMQConfig);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(schema, rabbitMQConfig);
+        result = 31 * result + Arrays.hashCode(partitioning);
+        return result;
     }
 }
