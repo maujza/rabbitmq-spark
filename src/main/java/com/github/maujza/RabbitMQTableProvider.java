@@ -16,7 +16,7 @@ public final class RabbitMQTableProvider implements TableProvider, DataSourceReg
     }
 
     @Override
-    public Table getTable(StructType structType, Transform[] transforms, Map<String, String> map) {
+    public Table getTable(StructType schema, Transform[] transforms, Map<String, String> map) {
         return new RabbitMQTable();
     }
 
