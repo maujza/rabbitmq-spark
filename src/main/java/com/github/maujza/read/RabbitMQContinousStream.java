@@ -9,6 +9,7 @@ import org.apache.spark.sql.types.StructType;
 import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.github.maujza.read.RabbitMQInputPartition;
 
 public class RabbitMQContinousStream implements ContinuousStream {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousStream.class);
@@ -22,12 +23,14 @@ public class RabbitMQContinousStream implements ContinuousStream {
 
     @Override
     public InputPartition[] planInputPartitions(Offset offset) {
-        return new InputPartition[0];
+        return new InputPartition[] {
+                new RabbitMQInputPartition(0)
+        };
     }
 
     @Override
     public ContinuousPartitionReaderFactory createContinuousReaderFactory() {
-        return new RabbitMQContinousPartitionReaderFactory();
+        return new RabbitMQContinousPartitionReaderFactory(new RabbitMQMessageToRowConverter(schema));
     }
 
     @Override
