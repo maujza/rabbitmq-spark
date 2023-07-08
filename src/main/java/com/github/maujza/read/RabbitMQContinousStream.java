@@ -14,14 +14,12 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 public class RabbitMQContinousStream implements ContinuousStream {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousStream.class);
     private final StructType schema;
-    private final RabbitMQMessageToRowConverter RabbitMQMessageToRowConverter;
 
     private final CaseInsensitiveStringMap options;
 
     public RabbitMQContinousStream(StructType schema, CaseInsensitiveStringMap options) {
         this.schema = schema;
         this.options = options;
-        this.RabbitMQMessageToRowConverter = new RabbitMQMessageToRowConverter(schema);
     }
 
     @Override

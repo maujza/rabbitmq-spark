@@ -4,7 +4,6 @@ import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.streaming.ContinuousPartitionReader;
 import org.apache.spark.sql.connector.read.streaming.PartitionOffset;
-import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import java.io.IOException;
 

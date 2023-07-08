@@ -8,7 +8,6 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.github.maujza.schema.RabbitMQMessageToRowConverter;
-import com.github.maujza.read.RabbitMQInputPartition;
 
 final class RabbitMQContinousPartitionReaderFactory implements ContinuousPartitionReaderFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousPartitionReaderFactory.class);
