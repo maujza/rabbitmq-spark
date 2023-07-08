@@ -1,6 +1,7 @@
 package com.github.maujza.config;
 
 import com.rabbitmq.client.ConnectionFactory;
+import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,27 @@ public class RabbitMQConnectionConfig implements Serializable {
 
     private Integer prefetchCount;
     private final long deliveryTimeout;
+
+    public RabbitMQConnectionConfig(CaseInsensitiveStringMap options) {
+        this.host = options.get("host");
+        this.port = options.containsKey("port") ? Integer.parseInt(options.get("port")) : null;
+        this.virtualHost = options.get("virtualHost");
+        this.username = options.get("username");
+        this.password = options.get("password");
+        this.uri = options.get("uri");
+
+        this.networkRecoveryInterval = options.containsKey("networkRecoveryInterval") ? Integer.parseInt(options.get("networkRecoveryInterval")) : null;
+        this.automaticRecovery = options.containsKey("automaticRecovery") ? Boolean.parseBoolean(options.get("automaticRecovery")) : null;
+        this.topologyRecovery = options.containsKey("topologyRecovery") ? Boolean.parseBoolean(options.get("topologyRecovery")) : null;
+
+        this.connectionTimeout = options.containsKey("connectionTimeout") ? Integer.parseInt(options.get("connectionTimeout")) : null;
+        this.requestedChannelMax = options.containsKey("requestedChannelMax") ? Integer.parseInt(options.get("requestedChannelMax")) : null;
+        this.requestedFrameMax = options.containsKey("requestedFrameMax") ? Integer.parseInt(options.get("requestedFrameMax")) : null;
+        this.requestedHeartbeat = options.containsKey("requestedHeartbeat") ? Integer.parseInt(options.get("requestedHeartbeat")) : null;
+
+        this.prefetchCount = options.containsKey("prefetchCount") ? Integer.parseInt(options.get("prefetchCount")) : null;
+        this.deliveryTimeout = options.containsKey("deliveryTimeout") ? Long.parseLong(options.get("deliveryTimeout")) : DEFAULT_DELIVERY_TIMEOUT;
+    }
 
     private RabbitMQConnectionConfig(
             String host,
