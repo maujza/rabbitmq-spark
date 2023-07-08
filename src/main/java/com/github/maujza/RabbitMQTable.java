@@ -18,14 +18,14 @@ public class RabbitMQTable implements Table, SupportsRead {
     private static final Set<TableCapability> TABLE_CAPABILITY_SET = new HashSet<>(List.of(TableCapability.CONTINUOUS_READ));
     private final StructType schema;
     private final Transform[] partitioning;
-    private final Map<String, String> rabbitMQConfig;
+    private final Map<String, String> properties;
 
     RabbitMQTable(
-            final StructType schema, final Transform[] partitioning, final Map<String, String> rabbitMQConfig) {
+            final StructType schema, final Transform[] partitioning, final Map<String, String> properties) {
         LOGGER.info("Creating RabbitMQTable");
         this.schema = schema;
         this.partitioning = partitioning;
-        this.rabbitMQConfig = rabbitMQConfig;
+        this.properties = properties;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     @Override
     public Map<String, String> properties() {
-        return rabbitMQConfig;
+        return properties;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new RabbitMQScanBuilder(schema);
+        return new RabbitMQScanBuilder(schema, options);
     }
 
     @Override
@@ -69,12 +69,12 @@ public class RabbitMQTable implements Table, SupportsRead {
         final RabbitMQTable that = (RabbitMQTable) o;
         return Objects.equals(schema, that.schema)
                 && Arrays.equals(partitioning, that.partitioning)
-                && Objects.equals(rabbitMQConfig, that.rabbitMQConfig);
+                && Objects.equals(properties, that.properties);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(schema, rabbitMQConfig);
+        int result = Objects.hash(schema, properties);
         result = 31 * result + Arrays.hashCode(partitioning);
         return result;
     }

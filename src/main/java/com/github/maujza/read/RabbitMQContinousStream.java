@@ -9,15 +9,18 @@ import org.apache.spark.sql.types.StructType;
 import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.maujza.read.RabbitMQInputPartition;
+import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 public class RabbitMQContinousStream implements ContinuousStream {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousStream.class);
     private final StructType schema;
     private final RabbitMQMessageToRowConverter RabbitMQMessageToRowConverter;
 
-    public RabbitMQContinousStream(StructType schema) {
+    private final CaseInsensitiveStringMap options;
+
+    public RabbitMQContinousStream(StructType schema, CaseInsensitiveStringMap options) {
         this.schema = schema;
+        this.options = options;
         this.RabbitMQMessageToRowConverter = new RabbitMQMessageToRowConverter(schema);
     }
 
@@ -30,7 +33,7 @@ public class RabbitMQContinousStream implements ContinuousStream {
 
     @Override
     public ContinuousPartitionReaderFactory createContinuousReaderFactory() {
-        return new RabbitMQContinousPartitionReaderFactory(new RabbitMQMessageToRowConverter(schema));
+        return new RabbitMQContinousPartitionReaderFactory(new RabbitMQMessageToRowConverter(schema), options);
     }
 
     @Override
