@@ -1,94 +1,50 @@
 package com.github.maujza.connector;
 
-import com.rabbitmq.client.AMQP;
+import com.github.maujza.config.RabbitMQConnectionConfig;
+import com.github.maujza.read.Util;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConsumerCancelledException;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Delivery;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.utility.Utility;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
-class RabbitMQConnection extends DefaultConsumer {
-    private final BlockingQueue<Delivery> queue;
+public class RabbitMQConnection {
+    private final RabbitMQConnectionConfig connectionConfig;
 
-    private volatile ShutdownSignalException shutdown;
-    private volatile ConsumerCancelledException cancelled;
+    private final String queueName;
+    private transient Channel channel;
+    private transient RabbitMQConsumer consumer;
 
-    private static final Delivery POISON = new Delivery(null, null, null);
+    protected transient boolean autoAck;
 
-    public RabbitMQConnection(Channel channel) {
-        this(channel, Integer.MAX_VALUE);
+    public RabbitMQConnection(RabbitMQConnectionConfig connectionConfig, String queueName) {
+        this.queueName = queueName;
+        this.connectionConfig = connectionConfig;
     }
 
-    public RabbitMQConnection(Channel channel, int capacity) {
-        super(channel);
-        this.queue = new LinkedBlockingQueue<>(capacity);
+    protected ConnectionFactory setupConnectionFactory() throws Exception {
+        return connectionConfig.getConnectionFactory();
     }
 
-    private void checkShutdown() {
-        if (shutdown != null) {
-            throw Utility.fixStackTrace(shutdown);
+    protected Connection setupConnection() throws Exception {
+        return setupConnectionFactory().newConnection();
+    }
+
+    private Channel setupChannel(Connection connection) throws Exception {
+        Channel chan = connection.createChannel();
+        if (connectionConfig.getPrefetchCount().isPresent()) {
+            chan.basicQos(connectionConfig.getPrefetchCount().get(), true);
         }
+        return chan;
     }
 
-    private Delivery handle(Delivery delivery) {
-        if (delivery == POISON || delivery == null && (shutdown != null || cancelled != null)) {
-            if (delivery == POISON) {
-                queue.add(POISON);
-                if (shutdown == null && cancelled == null) {
-                    throw new IllegalStateException(
-                            "POISON in queue, but null shutdown and null cancelled. "
-                                    + "This should never happen, please report as a BUG");
-                }
-            }
-            if (null != shutdown) {
-                throw Utility.fixStackTrace(shutdown);
-            }
-            if (null != cancelled) {
-                throw Utility.fixStackTrace(cancelled);
-            }
-        }
-        return delivery;
+    protected void setupQueue() throws IOException {
+        Util.declareQueueDefaults(channel, queueName);
     }
 
-    public Delivery nextDelivery()
-            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException {
-        return handle(queue.take());
-    }
+    public Channel getConfiguredChannel() {
+        return null;
+    };
 
-    public Delivery nextDelivery(long timeout)
-            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException {
-        return nextDelivery(timeout, TimeUnit.MILLISECONDS);
-    }
-
-    public Delivery nextDelivery(long timeout, TimeUnit unit)
-            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException {
-        return handle(queue.poll(timeout, unit));
-    }
-
-    @Override
-    public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-        shutdown = sig;
-        queue.add(POISON);
-    }
-
-    @Override
-    public void handleCancel(String consumerTag) throws IOException {
-        cancelled = new ConsumerCancelledException();
-        queue.add(POISON);
-    }
-
-    @Override
-    public void handleDelivery(
-            String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-            throws IOException {
-        checkShutdown();
-        this.queue.add(new Delivery(envelope, properties, body));
-    }
 }
+
