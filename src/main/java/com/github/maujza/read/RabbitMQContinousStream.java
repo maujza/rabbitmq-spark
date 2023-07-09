@@ -30,7 +30,7 @@ public class RabbitMQContinousStream implements ContinuousStream {
 
     @Override
     public ContinuousPartitionReaderFactory createContinuousReaderFactory() {
-        return new RabbitMQContinousPartitionReaderFactory(new RabbitMQMessageToRowConverter(schema), options);
+        return new RabbitMQContinousPartitionReaderFactory(schema, options);
     }
 
     @Override

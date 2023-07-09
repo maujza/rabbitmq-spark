@@ -27,9 +27,10 @@ public class RabbitMQContinousPartitionReader implements ContinuousPartitionRead
     private final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter;
     private final CaseInsensitiveStringMap options;
     private RabbitMQConnectionConfig connectionConfig;
-    public RabbitMQContinousPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final CaseInsensitiveStringMap options) {
+    public RabbitMQContinousPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final RabbitMQConnectionConfig connectionConfig,final CaseInsensitiveStringMap options) {
         this.options = options;
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
+        this.connectionConfig = connectionConfig;
         this.queueName = options.get("queueName");
     }
     @Override
