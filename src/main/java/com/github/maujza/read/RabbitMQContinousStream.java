@@ -14,7 +14,6 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 public class RabbitMQContinousStream implements ContinuousStream {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousStream.class);
     private final StructType schema;
-
     private final CaseInsensitiveStringMap options;
 
     public RabbitMQContinousStream(StructType schema, CaseInsensitiveStringMap options) {

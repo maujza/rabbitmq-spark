@@ -10,10 +10,13 @@ import java.io.IOException;
 
 public class RabbitMQConnection {
     private final RabbitMQConnectionConfig connectionConfig;
+
     private transient Connection connection;
+
     private final String queueName;
     private transient Channel channel;
     private transient RabbitMQConsumer consumer;
+
     protected transient boolean autoAck;
 
     public RabbitMQConnection(RabbitMQConnectionConfig connectionConfig, String queueName) {

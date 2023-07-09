@@ -20,39 +20,30 @@ import com.rabbitmq.client.Envelope;
 import org.slf4j.Logger;
 
 public class RabbitMQContinousPartitionReader implements ContinuousPartitionReader<InternalRow> {
-
     protected transient Channel channel;
     protected transient RabbitMQConnection connection;
     protected final String queueName;
-
     protected transient boolean autoAck;
     private final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter;
     private final CaseInsensitiveStringMap options;
     private RabbitMQConnectionConfig connectionConfig;
-
     public RabbitMQContinousPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final CaseInsensitiveStringMap options) {
         this.options = options;
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
         this.queueName = options.get("queueName");
     }
-
-
-
-        @Override
+    @Override
     public PartitionOffset getOffset() {
         return null;
     }
-
     @Override
     public boolean next() throws IOException {
         return false;
     }
-
     @Override
     public InternalRow get() {
         return null;
     }
-
     @Override
     public void close() throws IOException {
 

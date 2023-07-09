@@ -13,14 +13,11 @@ final class RabbitMQContinousPartitionReaderFactory implements ContinuousPartiti
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousPartitionReaderFactory.class);
     private static final long serialVersionUID = 1L;
     private final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter;
-
     private final CaseInsensitiveStringMap options;
-
     RabbitMQContinousPartitionReaderFactory(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final CaseInsensitiveStringMap options) {
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
         this.options = options;
     }
-
     @Override
     public ContinuousPartitionReader<InternalRow> createReader(final InputPartition partition) {
         LOGGER.debug("Creating RabbitMQStreamPartitionReader for {}", partition);

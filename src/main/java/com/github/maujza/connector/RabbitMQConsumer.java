@@ -19,22 +19,18 @@ public class RabbitMQConsumer extends DefaultConsumer {
     private volatile ShutdownSignalException shutdown;
     private volatile ConsumerCancelledException cancelled;
     private static final Delivery POISON = new Delivery(null, null, null);
-
     public RabbitMQConsumer(Channel channel) {
         this(channel, Integer.MAX_VALUE);
     }
-
     public RabbitMQConsumer(Channel channel, int capacity) {
         super(channel);
         this.queue = new LinkedBlockingQueue<>(capacity);
     }
-
     private void checkShutdown() {
         if (shutdown != null) {
             throw Utility.fixStackTrace(shutdown);
         }
     }
-
     private Delivery handle(Delivery delivery) {
         if (delivery == POISON || delivery == null && (shutdown != null || cancelled != null)) {
             if (delivery == POISON) {
