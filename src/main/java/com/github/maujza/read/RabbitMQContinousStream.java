@@ -22,6 +22,7 @@ public class RabbitMQContinousStream implements ContinuousStream {
 
     @Override
     public InputPartition[] planInputPartitions(Offset offset) {
+        LOGGER.info("Planning input partitions with offset: {}", offset);
         return new InputPartition[] {
                 new RabbitMQInputPartition(0)
         };
@@ -29,6 +30,7 @@ public class RabbitMQContinousStream implements ContinuousStream {
 
     @Override
     public ContinuousPartitionReaderFactory createContinuousReaderFactory() {
+        LOGGER.info("Creating continuous reader factory");
         return new RabbitMQContinousPartitionReaderFactory(schema, options);
     }
 
@@ -39,6 +41,7 @@ public class RabbitMQContinousStream implements ContinuousStream {
 
     @Override
     public Offset initialOffset() {
+        LOGGER.info("RabbitMQ has no concept of offsets");
         return null;
     }
 
@@ -49,11 +52,11 @@ public class RabbitMQContinousStream implements ContinuousStream {
 
     @Override
     public void commit(Offset offset) {
-        LOGGER.info("RabbitMQ has no concept of offsets");
+        LOGGER.info("RabbitMQ has no concept of offsets, attempted to commit: {}", offset);
     }
 
     @Override
     public void stop() {
-        LOGGER.info("RabbitMQ continuos stream has stopped");
+        LOGGER.info("RabbitMQ continuous stream has stopped");
     }
 }
