@@ -1,7 +1,6 @@
 package com.github.maujza.connector;
 
 import com.github.maujza.config.RabbitMQConnectionConfig;
-import com.github.maujza.read.Util;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -42,8 +41,12 @@ public class RabbitMQConnection {
         return chan;
     }
 
+    public static void declareQueueDefaults(Channel channel, String queueName) throws IOException {
+        channel.queueDeclare(queueName, true, false, false, null);
+    }
+
     protected void setupQueue() throws IOException {
-        Util.declareQueueDefaults(channel, queueName);
+        declareQueueDefaults(channel, queueName);
     }
 
     public Channel getConfiguredChannel() {
