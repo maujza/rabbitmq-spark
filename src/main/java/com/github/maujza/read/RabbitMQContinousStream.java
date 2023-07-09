@@ -6,7 +6,6 @@ import org.apache.spark.sql.connector.read.streaming.ContinuousStream;
 import org.apache.spark.sql.connector.read.streaming.Offset;
 import org.apache.spark.sql.connector.read.streaming.PartitionOffset;
 import org.apache.spark.sql.types.StructType;
-import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;

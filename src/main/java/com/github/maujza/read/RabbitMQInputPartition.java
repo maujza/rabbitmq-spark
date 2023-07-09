@@ -16,7 +16,7 @@ public class RabbitMQInputPartition implements InputPartition {
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
-        };
+        }
         final RabbitMQInputPartition that = (RabbitMQInputPartition) o;
         return partitionId == that.partitionId;
     }

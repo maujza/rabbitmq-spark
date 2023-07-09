@@ -15,9 +15,6 @@ public class RabbitMQConnection {
 
     private final String queueName;
     private transient Channel channel;
-    private transient RabbitMQConsumer consumer;
-
-    protected transient boolean autoAck;
 
     public RabbitMQConnection(RabbitMQConnectionConfig connectionConfig, String queueName) {
         this(connectionConfig, queueName, null);
@@ -58,7 +55,7 @@ public class RabbitMQConnection {
             }
             setupQueue();
 
-            consumer = new RabbitMQConsumer(channel);
+            RabbitMQConsumer consumer = new RabbitMQConsumer(channel);
 
             channel.basicConsume(queueName, false, consumer);
 
@@ -71,7 +68,7 @@ public class RabbitMQConnection {
                     e);
         }
         return channel;
-    };
+    }
 
 }
 

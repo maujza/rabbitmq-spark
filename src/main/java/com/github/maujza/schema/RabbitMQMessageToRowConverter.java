@@ -2,6 +2,7 @@ package com.github.maujza.schema;
 
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,6 +30,11 @@ public class RabbitMQMessageToRowConverter implements Serializable {
             rowData.add(getValue(jsonObject, field.name(), field.dataType()));
         }
         return RowFactory.create(rowData.toArray());
+    }
+
+    public InternalRow convertToInternalRow(String message) {
+        Row row = convert(message);
+        return InternalRow.fromSeq(row.toSeq());
     }
 
     private Object getValue(JSONObject jsonObject, String name, DataType dataType) {

@@ -27,7 +27,7 @@ public class RabbitMQConnectionConfig implements Serializable {
     private String password;
     private String uri;
 
-    private Integer networkRecoveryInterval;
+    private final Integer networkRecoveryInterval;
     private Boolean automaticRecovery;
     private Boolean topologyRecovery;
 

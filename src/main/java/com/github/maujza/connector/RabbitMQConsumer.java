@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 public class RabbitMQConsumer extends DefaultConsumer {
     private final BlockingQueue<Delivery> queue;
     private volatile ShutdownSignalException shutdown;
+    private final Channel channel;
     private volatile ConsumerCancelledException cancelled;
     private static final Delivery POISON = new Delivery(null, null, null);
     public RabbitMQConsumer(Channel channel) {
@@ -24,6 +25,7 @@ public class RabbitMQConsumer extends DefaultConsumer {
     }
     public RabbitMQConsumer(Channel channel, int capacity) {
         super(channel);
+        this.channel = channel;
         this.queue = new LinkedBlockingQueue<>(capacity);
     }
     private void checkShutdown() {
@@ -84,5 +86,21 @@ public class RabbitMQConsumer extends DefaultConsumer {
             throws IOException {
         checkShutdown();
         this.queue.add(new Delivery(envelope, properties, body));
+    }
+
+    public void ack(long deliveryTag) throws IOException {
+        this.channel.basicAck(deliveryTag, false);
+    }
+
+    public void startTransaction() throws IOException {
+        this.channel.txSelect();
+    }
+
+    public void commitTransaction() throws IOException {
+        this.channel.txCommit();
+    }
+
+    public void rollbackTransaction() throws IOException {
+        this.channel.txRollback();
     }
 }
