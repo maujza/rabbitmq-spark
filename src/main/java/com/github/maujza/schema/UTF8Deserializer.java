@@ -1,13 +1,10 @@
 package com.github.maujza.schema;
 
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-public class UTF8Deserializer implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+public class UTF8Deserializer implements Deserializer {
     private final Charset charset;
 
     public UTF8Deserializer() {
@@ -18,9 +15,8 @@ public class UTF8Deserializer implements Serializable {
         this.charset = charset;
     }
 
+    @Override
     public String deserialize(byte[] message) {
         return new String(message, charset);
     }
-
-
 }
