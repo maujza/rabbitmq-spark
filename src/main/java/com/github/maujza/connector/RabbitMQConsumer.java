@@ -16,12 +16,9 @@ import java.util.concurrent.TimeUnit;
 
 public class RabbitMQConsumer extends DefaultConsumer {
     private final BlockingQueue<Delivery> queue;
-
     private volatile ShutdownSignalException shutdown;
     private volatile ConsumerCancelledException cancelled;
-
     private static final Delivery POISON = new Delivery(null, null, null);
-
 
     public RabbitMQConsumer(Channel channel) {
         this(channel, Integer.MAX_VALUE);
