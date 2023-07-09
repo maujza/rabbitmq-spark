@@ -73,5 +73,18 @@ public class RabbitMQConnection {
         return channel;
     }
 
+    public void closeAll() throws IOException {
+        try {
+            if (channel != null && channel.isOpen()) {
+                channel.close();
+            }
+            if (connection != null && connection.isOpen()) {
+                connection.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
 

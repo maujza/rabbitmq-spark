@@ -14,6 +14,8 @@ import com.rabbitmq.client.Delivery;
 
 public class RabbitMQContinousPartitionReader implements ContinuousPartitionReader<InternalRow> {
 
+    private final RabbitMQConnection connection;
+
     private Delivery currentDelivery;
 
     private InternalRow currentRecord;
@@ -24,7 +26,7 @@ public class RabbitMQContinousPartitionReader implements ContinuousPartitionRead
 
     public RabbitMQContinousPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final RabbitMQConnectionConfig connectionConfig,final CaseInsensitiveStringMap options) {
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
-        RabbitMQConnection connection = new RabbitMQConnection(connectionConfig, options.get("queueName"));
+        this.connection = new RabbitMQConnection(connectionConfig, options.get("queueName"));
         this.consumer = new RabbitMQConsumer(connection.getConfiguredChannel());
     }
 
@@ -62,6 +64,6 @@ public class RabbitMQContinousPartitionReader implements ContinuousPartitionRead
     }
     @Override
     public void close() throws IOException {
-
+        connection.closeAll();
     }
 }
