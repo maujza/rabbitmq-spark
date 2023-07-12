@@ -8,16 +8,15 @@ import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import com.github.maujza.schema.SerializableCaseInsensitiveStringMap;
 import com.rabbitmq.client.Delivery;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.connector.read.streaming.ContinuousPartitionReader;
-import org.apache.spark.sql.connector.read.streaming.PartitionOffset;
+import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class RabbitMQContinousPartitionReader implements ContinuousPartitionReader<InternalRow> {
+public class RabbitMQMicroBatchPartitionReader implements PartitionReader<InternalRow> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousPartitionReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMicroBatchPartitionReader.class);
 
     private final RabbitMQConnection connection;
 
@@ -29,15 +28,10 @@ public class RabbitMQContinousPartitionReader implements ContinuousPartitionRead
 
     private final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter;
 
-    public RabbitMQContinousPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final RabbitMQConnectionConfig connectionConfig, final SerializableCaseInsensitiveStringMap options) {
+    public RabbitMQMicroBatchPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final RabbitMQConnectionConfig connectionConfig, final SerializableCaseInsensitiveStringMap options) {
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
         this.connection = new RabbitMQConnection(connectionConfig, options.get("queue_name"));
         this.consumer = new RabbitMQConsumer(connection.getConfiguredChannel());
-    }
-
-    @Override
-    public PartitionOffset getOffset() {
-        return null;
     }
 
     @Override

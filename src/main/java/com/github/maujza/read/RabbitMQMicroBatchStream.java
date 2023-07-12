@@ -1,42 +1,41 @@
 package com.github.maujza.read;
 
 import org.apache.spark.sql.connector.read.InputPartition;
-import org.apache.spark.sql.connector.read.streaming.ContinuousPartitionReaderFactory;
-import org.apache.spark.sql.connector.read.streaming.ContinuousStream;
+import org.apache.spark.sql.connector.read.PartitionReaderFactory;
+import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.connector.read.streaming.Offset;
-import org.apache.spark.sql.connector.read.streaming.PartitionOffset;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RabbitMQContinousStream implements ContinuousStream {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousStream.class);
+public class RabbitMQMicroBatchStream implements MicroBatchStream {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMicroBatchStream.class);
     private final StructType schema;
     private final CaseInsensitiveStringMap options;
 
-    public RabbitMQContinousStream(StructType schema, CaseInsensitiveStringMap options) {
+    public RabbitMQMicroBatchStream(StructType schema, CaseInsensitiveStringMap options) {
         this.schema = schema;
         this.options = options;
     }
 
     @Override
-    public InputPartition[] planInputPartitions(Offset offset) {
-        LOGGER.info("Planning input partitions with offset: {}", offset);
+    public InputPartition[] planInputPartitions(Offset start, Offset end) {
+        LOGGER.info("Planning input partitions with no offsets");
         return new InputPartition[] {
                 new RabbitMQInputPartition(0)
         };
     }
 
     @Override
-    public ContinuousPartitionReaderFactory createContinuousReaderFactory() {
-        LOGGER.info("Creating continuous reader factory");
-        return new RabbitMQContinousPartitionReaderFactory(schema, options);
+    public Offset latestOffset() {
+        return null;
     }
 
     @Override
-    public Offset mergeOffsets(PartitionOffset[] partitionOffsets) {
-        return null;
+    public PartitionReaderFactory createReaderFactory() {
+        LOGGER.info("Creating continuous reader factory");
+        return new RabbitMQMicroBatchPartitionReaderFactory(schema, options);
     }
 
     @Override
@@ -60,3 +59,4 @@ public class RabbitMQContinousStream implements ContinuousStream {
         LOGGER.info("RabbitMQ continuous stream has stopped");
     }
 }
+

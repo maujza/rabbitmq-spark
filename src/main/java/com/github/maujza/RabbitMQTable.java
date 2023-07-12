@@ -15,7 +15,13 @@ import java.util.*;
 
 public class RabbitMQTable implements Table, SupportsRead {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQTable.class);
-    private static final Set<TableCapability> TABLE_CAPABILITY_SET = new HashSet<>(List.of(TableCapability.CONTINUOUS_READ));
+    private static final Set<TableCapability> TABLE_CAPABILITY_SET = new HashSet<>();
+
+    static {
+        TABLE_CAPABILITY_SET.add(TableCapability.CONTINUOUS_READ);
+        TABLE_CAPABILITY_SET.add(TableCapability.MICRO_BATCH_READ);
+    }
+
     private final StructType schema;
     private final Transform[] partitioning;
     private final Map<String, String> properties;

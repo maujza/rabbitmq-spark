@@ -49,15 +49,15 @@ public class RabbitMQConnection {
         return chan;
     }
 
-    public static void declareQueueDefaults(Channel channel, String queueName) throws IOException {
-        LOGGER.debug("Declaring queue defaults for queueName: {}", queueName);
-        channel.queueDeclare(queueName, true, false, false, null);
-    }
-
-    protected void setupQueue() throws IOException {
-        LOGGER.debug("Setting up Queue");
-        declareQueueDefaults(channel, queueName);
-    }
+//    public static void declareQueueDefaults(Channel channel, String queueName) throws IOException {
+//        LOGGER.debug("Declaring queue defaults for queueName: {}", queueName);
+//        channel.queueDeclare(queueName, true, false, false, null);
+//    }
+//
+//    protected void setupQueue() throws IOException {
+//        LOGGER.debug("Setting up Queue");
+//        declareQueueDefaults(channel, queueName);
+//    }
 
     public Channel getConfiguredChannel() {
         LOGGER.info("Getting configured channel");
@@ -67,7 +67,7 @@ public class RabbitMQConnection {
             if (channel == null) {
                 throw new RuntimeException("None of RabbitMQ channels are available");
             }
-            setupQueue();
+//            setupQueue();
 
             RabbitMQConsumer consumer = new RabbitMQConsumer(channel);
 

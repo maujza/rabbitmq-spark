@@ -2,6 +2,7 @@ package com.github.maujza.read;
 
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.streaming.ContinuousStream;
+import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
@@ -28,5 +29,11 @@ final class RabbitMQScan implements Scan {
     public ContinuousStream toContinuousStream(final String checkpointLocation) {
         logger.info("Creating a ContinuousStream with no checkpointLocation");
         return new RabbitMQContinousStream(schema, options);
+    }
+
+    @Override
+    public MicroBatchStream toMicroBatchStream(final String checkpointLocation) {
+        logger.info("Creating a MicroBatchStream with no checkpointLocation");
+        return new RabbitMQMicroBatchStream(schema, options);
     }
 }

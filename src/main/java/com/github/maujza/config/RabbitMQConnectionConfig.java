@@ -42,7 +42,7 @@ public class RabbitMQConnectionConfig implements Serializable {
     public RabbitMQConnectionConfig(CaseInsensitiveStringMap options) {
         this.host = options.get("host");
         this.port = options.containsKey("port") ? Integer.parseInt(options.get("port")) : null;
-        this.virtualHost = options.get("virtualHost");
+        this.virtualHost = options.get("virtual_host");
         this.username = options.get("username");
         this.password = options.get("password");
         this.uri = options.get("uri");
