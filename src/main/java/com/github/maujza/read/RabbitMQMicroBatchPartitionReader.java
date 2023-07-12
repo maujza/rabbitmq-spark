@@ -3,7 +3,7 @@ package com.github.maujza.read;
 import com.github.maujza.config.RabbitMQConnectionConfig;
 import com.github.maujza.connector.RabbitMQConnection;
 import com.github.maujza.connector.RabbitMQConsumer;
-import com.github.maujza.schema.DeliverySerializer;
+import com.github.maujza.schema.DeliveryDeserializer;
 import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import com.github.maujza.schema.SerializableCaseInsensitiveStringMap;
 import com.rabbitmq.client.Delivery;
@@ -40,7 +40,7 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
             LOGGER.debug("Starting transaction and polling for next message");
             consumer.startTransaction(); // start the transaction
             currentDelivery = consumer.nextDelivery(); // poll for next message
-            String deserializedDelivery = DeliverySerializer.deserialize(currentDelivery);
+            String deserializedDelivery = DeliveryDeserializer.deserialize(currentDelivery);
             currentRecord = rabbitMQMessageToRowConverter.convertToInternalRow(deserializedDelivery);
             return true;
         } catch (Exception e) {
