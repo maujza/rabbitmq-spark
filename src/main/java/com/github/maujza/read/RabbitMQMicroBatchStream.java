@@ -29,6 +29,7 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
 
     @Override
     public Offset latestOffset() {
+        LOGGER.info("RabbitMQ has no concept of offsets, latest offset null");
         return null;
     }
 
@@ -40,12 +41,13 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
 
     @Override
     public Offset initialOffset() {
-        LOGGER.info("RabbitMQ has no concept of offsets");
+        LOGGER.info("RabbitMQ has no concept of offsets, initial offset null");
         return null;
     }
 
     @Override
     public Offset deserializeOffset(String s) {
+        LOGGER.info("RabbitMQ has no concept of offsets, attempted to deserialize: {}", s);
         return null;
     }
 

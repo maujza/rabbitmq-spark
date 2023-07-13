@@ -40,6 +40,9 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
             LOGGER.debug("Starting transaction and polling for next message");
             consumer.startTransaction(); // start the transaction
             currentDelivery = consumer.nextDelivery(); // poll for next message
+            if (currentDelivery.getEnvelope().getDeliveryTag() > 1000) {
+                return false; // End of the offset range.
+            }
             String deserializedDelivery = DeliveryDeserializer.deserialize(currentDelivery);
             currentRecord = rabbitMQMessageToRowConverter.convertToInternalRow(deserializedDelivery);
             return true;
