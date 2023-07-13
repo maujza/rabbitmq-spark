@@ -37,7 +37,7 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     @Override
     public boolean next() throws IOException {
         try {
-            LOGGER.debug("Starting transaction and polling for next message");
+            LOGGER.info("Starting transaction and polling for next message");
             consumer.startTransaction(); // start the transaction
             currentDelivery = consumer.nextDelivery(); // poll for next message
             if (currentDelivery.getEnvelope().getDeliveryTag() > 1000) {
@@ -55,7 +55,7 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     @Override
     public InternalRow get() {
         try {
-            LOGGER.debug("Acknowledging and committing transaction");
+            LOGGER.info("Acknowledging and committing transaction");
             consumer.ack(currentDelivery.getEnvelope().getDeliveryTag()); // manual ack after message is processed
             consumer.commitTransaction(); // commit the transaction
         } catch (IOException e) {

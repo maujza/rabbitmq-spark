@@ -30,7 +30,7 @@ final class RabbitMQMicroBatchPartitionReaderFactory implements PartitionReaderF
     }
     @Override
     public PartitionReader<InternalRow> createReader(final InputPartition partition) {
-        LOGGER.debug("Creating RabbitMQPartitionReader for {}", partition);
+        LOGGER.info("Creating RabbitMQPartitionReader for {}", partition);
         return new RabbitMQMicroBatchPartitionReader(rabbitMQMessageToRowConverter, connectionConfig, options);
     }
 }
