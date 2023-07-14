@@ -8,6 +8,8 @@ import com.rabbitmq.client.Delivery;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.utility.Utility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
@@ -15,6 +17,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class RabbitMQConsumer extends DefaultConsumer {
+
+    private static final Logger logger = LoggerFactory.getLogger(RabbitMQConsumer.class);
+
     private final BlockingQueue<Delivery> queue;
     private volatile ShutdownSignalException shutdown;
     private final Channel channel;
@@ -23,10 +28,12 @@ public class RabbitMQConsumer extends DefaultConsumer {
     public RabbitMQConsumer(Channel channel) {
         this(channel, Integer.MAX_VALUE);
     }
+
     public RabbitMQConsumer(Channel channel, int capacity) {
         super(channel);
         this.channel = channel;
         this.queue = new LinkedBlockingQueue<>(capacity);
+        logger.info("RabbitMQConsumer initialized with a channel and capacity: {}", capacity);
     }
     private void checkShutdown() {
         if (shutdown != null) {

@@ -26,14 +26,14 @@ public class RabbitMQInputPartition implements InputPartition {
         }
         final RabbitMQInputPartition that = (RabbitMQInputPartition) o;
         boolean equals = partitionId == that.partitionId;
-        logger.debug("Comparing partitions: {} and {}. Equal: {}", this, that, equals);
+        logger.info("Comparing partitions: {} and {}. Equal: {}", this, that, equals);
         return equals;
     }
 
     @Override
     public int hashCode() {
         int hashCode = Objects.hash(partitionId);
-        logger.debug("Generated hash code for partition {}: {}", partitionId, hashCode);
+        logger.info("Generated hash code for partition {}: {}", partitionId, hashCode);
         return hashCode;
     }
 }

@@ -38,13 +38,15 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     public boolean next() throws IOException {
         try {
             LOGGER.info("Starting transaction and polling for next message");
-            consumer.startTransaction(); // start the transaction
-            currentDelivery = consumer.nextDelivery(); // poll for next message
+            currentDelivery = consumer.nextDelivery(30000); // poll for next message
+            LOGGER.info("current delivery ", currentDelivery);
             if (currentDelivery.getEnvelope().getDeliveryTag() > 1000) {
                 return false; // End of the offset range.
             }
+
             String deserializedDelivery = DeliveryDeserializer.deserialize(currentDelivery);
             currentRecord = rabbitMQMessageToRowConverter.convertToInternalRow(deserializedDelivery);
+            LOGGER.info("returning true");
             return true;
         } catch (Exception e) {
             LOGGER.error("Error occurred while fetching next message", e);
@@ -57,14 +59,8 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
         try {
             LOGGER.info("Acknowledging and committing transaction");
             consumer.ack(currentDelivery.getEnvelope().getDeliveryTag()); // manual ack after message is processed
-            consumer.commitTransaction(); // commit the transaction
         } catch (IOException e) {
             LOGGER.error("Error occurred while acknowledging or committing transaction, attempting rollback", e);
-            try {
-                consumer.rollbackTransaction(); // rollback the transaction in case of an error
-            } catch (IOException ex) {
-                LOGGER.error("Error occurred while rolling back transaction", ex);
-            }
         }
         return currentRecord;
     }
