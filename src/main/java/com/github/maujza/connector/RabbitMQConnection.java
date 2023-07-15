@@ -59,18 +59,17 @@ public class RabbitMQConnection {
 //        declareQueueDefaults(channel, queueName);
 //    }
 
-    public Channel getConfiguredChannel() {
+    public RabbitMQConsumer getConsumerFromConfiguredChannel() {
         LOGGER.info("Getting configured channel");
+        RabbitMQConsumer consumer = null;
         try {
             connection = setupConnection();
             channel = setupChannel(connection);
             if (channel == null) {
                 throw new RuntimeException("None of RabbitMQ channels are available");
             }
-//            setupQueue();
 
-            RabbitMQConsumer consumer = new RabbitMQConsumer(channel);
-
+            consumer = new RabbitMQConsumer(channel);
             channel.basicConsume(queueName, false, consumer);
 
         } catch (Exception e) {
@@ -81,7 +80,7 @@ public class RabbitMQConnection {
                             + connectionConfig.getHost(),
                     e);
         }
-        return channel;
+        return consumer;
     }
 
     public void closeAll() throws IOException {

@@ -27,26 +27,23 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     private final RabbitMQConsumer consumer;
 
     private final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter;
+    private String currentMessage;
 
     public RabbitMQMicroBatchPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final RabbitMQConnectionConfig connectionConfig, final SerializableCaseInsensitiveStringMap options) {
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
         this.connection = new RabbitMQConnection(connectionConfig, options.get("queue_name"));
-        this.consumer = new RabbitMQConsumer(connection.getConfiguredChannel());
+        this.consumer = connection.getConsumerFromConfiguredChannel();
     }
 
     @Override
     public boolean next() throws IOException {
         try {
-            LOGGER.info("Starting transaction and polling for next message");
-            currentDelivery = consumer.nextDelivery(30000); // poll for next message
-            LOGGER.info("current delivery ", currentDelivery);
+            currentDelivery = consumer.nextDelivery(); // poll for next message
+            currentMessage = new String(currentDelivery.getBody(), "UTF-8");
             if (currentDelivery.getEnvelope().getDeliveryTag() > 1000) {
                 return false; // End of the offset range.
             }
-
-            String deserializedDelivery = DeliveryDeserializer.deserialize(currentDelivery);
-            currentRecord = rabbitMQMessageToRowConverter.convertToInternalRow(deserializedDelivery);
-            LOGGER.info("returning true");
+            currentRecord = rabbitMQMessageToRowConverter.convertToInternalRow(currentMessage);
             return true;
         } catch (Exception e) {
             LOGGER.error("Error occurred while fetching next message", e);

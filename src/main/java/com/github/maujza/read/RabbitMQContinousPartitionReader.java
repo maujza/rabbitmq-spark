@@ -10,16 +10,19 @@ import com.rabbitmq.client.Delivery;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.streaming.ContinuousPartitionReader;
 import org.apache.spark.sql.connector.read.streaming.PartitionOffset;
+import org.apache.spark.sql.execution.streaming.LongOffset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RabbitMQContinousPartitionReader implements ContinuousPartitionReader<InternalRow> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQContinousPartitionReader.class);
 
     private final RabbitMQConnection connection;
+    private final AtomicLong offset;
 
     private Delivery currentDelivery;
 
@@ -29,25 +32,29 @@ public class RabbitMQContinousPartitionReader implements ContinuousPartitionRead
 
     private final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter;
 
+    private String currentMessage;
+
     public RabbitMQContinousPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final RabbitMQConnectionConfig connectionConfig, final SerializableCaseInsensitiveStringMap options) {
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
         this.connection = new RabbitMQConnection(connectionConfig, options.get("queue_name"));
-        this.consumer = new RabbitMQConsumer(connection.getConfiguredChannel());
+        this.consumer = connection.getConsumerFromConfiguredChannel();
+        this.offset = new AtomicLong(0);
     }
 
     @Override
     public PartitionOffset getOffset() {
-        return null;
+        return (PartitionOffset) new LongOffset(offset.getAndAdd(1000));
     }
 
     @Override
     public boolean next() throws IOException {
         try {
-            LOGGER.debug("Starting transaction and polling for next message");
-            consumer.startTransaction(); // start the transaction
             currentDelivery = consumer.nextDelivery(); // poll for next message
-            String deserializedDelivery = DeliveryDeserializer.deserialize(currentDelivery);
-            currentRecord = rabbitMQMessageToRowConverter.convertToInternalRow(deserializedDelivery);
+            currentMessage = new String(currentDelivery.getBody(), "UTF-8");
+            if (currentDelivery.getEnvelope().getDeliveryTag() > 1000) {
+                return false; // End of the offset range.
+            }
+            currentRecord = rabbitMQMessageToRowConverter.convertToInternalRow(currentMessage);
             return true;
         } catch (Exception e) {
             LOGGER.error("Error occurred while fetching next message", e);
@@ -60,7 +67,7 @@ public class RabbitMQContinousPartitionReader implements ContinuousPartitionRead
         try {
             LOGGER.debug("Acknowledging and committing transaction");
             consumer.ack(currentDelivery.getEnvelope().getDeliveryTag()); // manual ack after message is processed
-            consumer.commitTransaction(); // commit the transaction
+//            consumer.commitTransaction(); // commit the transaction
         } catch (IOException e) {
             LOGGER.error("Error occurred while acknowledging or committing transaction, attempting rollback", e);
             try {

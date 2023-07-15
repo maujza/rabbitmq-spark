@@ -1,8 +1,7 @@
 package com.github.maujza.schema;
 
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.BooleanType;
 import org.apache.spark.sql.types.DataType;
@@ -27,22 +26,14 @@ public class RabbitMQMessageToRowConverter implements Serializable {
         this.schema = schema;
     }
 
-    public Row convert(String message) {
-        JSONObject jsonObject = new JSONObject(message);
-        return extractRow(jsonObject, schema);
-    }
-
-    private Row extractRow(JSONObject jsonObject, StructType structType) {
-        List<Object> rowData = new ArrayList<>();
-        for (StructField field : structType.fields()) {
-            rowData.add(getValue(jsonObject, field.name(), field.dataType()));
-        }
-        return RowFactory.create(rowData.toArray());
-    }
-
     public InternalRow convertToInternalRow(String message) {
-        Row row = convert(message);
-        return InternalRow.fromSeq(row.toSeq());
+        JSONObject jsonObject = new JSONObject(message);
+        Object[] values = new Object[schema.length()];
+        for (int i = 0; i < schema.length(); i++) {
+            StructField field = schema.fields()[i];
+            values[i] = getValue(jsonObject, field.name(), field.dataType());
+        }
+        return new GenericInternalRow(values);
     }
 
     private Object getValue(JSONObject jsonObject, String name, DataType dataType) {
@@ -59,7 +50,7 @@ public class RabbitMQMessageToRowConverter implements Serializable {
         } else if (dataType instanceof BooleanType) {
             return jsonObject.getBoolean(name);
         } else if (dataType instanceof StructType) {
-            return extractRow(jsonObject.getJSONObject(name), (StructType) dataType);
+            return convertToInternalRow(jsonObject.getJSONObject(name).toString());
         } else if (dataType instanceof ArrayType) {
             return extractList(jsonObject.getJSONArray(name), ((ArrayType) dataType).elementType());
         } else {
@@ -67,11 +58,11 @@ public class RabbitMQMessageToRowConverter implements Serializable {
         }
     }
 
-    private List<Object> extractList(JSONArray jsonArray, DataType elementType) {
+    private Object[] extractList(JSONArray jsonArray, DataType elementType) {
         List<Object> list = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             if (elementType instanceof StructType) {
-                list.add(extractRow(jsonArray.getJSONObject(i), (StructType) elementType));
+                list.add(convertToInternalRow(jsonArray.getJSONObject(i).toString()));
             } else if (elementType instanceof ArrayType) {
                 list.add(extractList(jsonArray.getJSONArray(i), ((ArrayType) elementType).elementType()));
             } else {
@@ -79,7 +70,6 @@ public class RabbitMQMessageToRowConverter implements Serializable {
                 list.add(getValue(tempObject, tempObject.keys().next(), elementType));
             }
         }
-        return list;
+        return list.toArray();
     }
 }
-

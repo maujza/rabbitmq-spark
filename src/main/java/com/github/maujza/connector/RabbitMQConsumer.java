@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,9 @@ public class RabbitMQConsumer extends DefaultConsumer {
     private final Channel channel;
     private volatile ConsumerCancelledException cancelled;
     private static final Delivery POISON = new Delivery(null, null, null);
+    private String taken;
+    private Delivery delivery_taken;
+
     public RabbitMQConsumer(Channel channel) {
         this(channel, Integer.MAX_VALUE);
     }
@@ -57,12 +61,16 @@ public class RabbitMQConsumer extends DefaultConsumer {
                 throw Utility.fixStackTrace(cancelled);
             }
         }
+
         return delivery;
     }
 
     public Delivery nextDelivery()
-            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException {
-        return handle(queue.take());
+            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException, UnsupportedEncodingException {
+        delivery_taken = queue.take();
+        taken = new String(delivery_taken.getBody(), "UTF-8");
+        logger.info("Taken message from the queue: ", taken);
+        return handle(delivery_taken);
     }
 
     public Delivery nextDelivery(long timeout)
@@ -93,6 +101,7 @@ public class RabbitMQConsumer extends DefaultConsumer {
             throws IOException {
         checkShutdown();
         this.queue.add(new Delivery(envelope, properties, body));
+
     }
 
     public void ack(long deliveryTag) throws IOException {
@@ -109,5 +118,9 @@ public class RabbitMQConsumer extends DefaultConsumer {
 
     public void rollbackTransaction() throws IOException {
         this.channel.txRollback();
+    }
+
+    public void printQueueSize() {
+        logger.info("Current queue size: {}", queue.size());
     }
 }
