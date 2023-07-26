@@ -10,6 +10,9 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 public final class RabbitMQTableProvider implements TableProvider, DataSourceRegister {
+
+    public RabbitMQTableProvider() {};
+
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap caseInsensitiveStringMap) {
         throw new UnsupportedOperationException("Schema inference is not supported.");
@@ -23,5 +26,10 @@ public final class RabbitMQTableProvider implements TableProvider, DataSourceReg
     @Override
     public String shortName() {
         return "rabbitmq";
+    }
+
+    @Override
+    public boolean supportsExternalMetadata() {
+        return true;
     }
 }
