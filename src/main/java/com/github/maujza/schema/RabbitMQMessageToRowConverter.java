@@ -13,6 +13,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.apache.spark.unsafe.types.UTF8String;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class RabbitMQMessageToRowConverter implements Serializable {
         if (jsonObject.isNull(name)) {
             return null;
         } else if (dataType instanceof StringType) {
-            return jsonObject.getString(name);
+            return UTF8String.fromString(jsonObject.getString(name));
         } else if (dataType instanceof IntegerType) {
             return jsonObject.getInt(name);
         } else if (dataType instanceof LongType) {
