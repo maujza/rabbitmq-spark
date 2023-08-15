@@ -18,4 +18,9 @@ public class SerializableCaseInsensitiveStringMap implements java.io.Serializabl
     public String get(String key) {
         return map.get(key.toLowerCase());
     }
+
+    public boolean containsKey(String key) {
+        return map.containsKey(key.toLowerCase());
+    }
+
 }
