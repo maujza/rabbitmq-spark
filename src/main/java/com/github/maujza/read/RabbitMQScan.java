@@ -26,12 +26,6 @@ final class RabbitMQScan implements Scan {
     }
 
     @Override
-    public ContinuousStream toContinuousStream(final String checkpointLocation) {
-        logger.info("Creating a ContinuousStream with no checkpointLocation");
-        return new RabbitMQContinousStream(schema, options);
-    }
-
-    @Override
     public MicroBatchStream toMicroBatchStream(final String checkpointLocation) {
         logger.info("Creating a MicroBatchStream with no checkpointLocation");
         return new RabbitMQMicroBatchStream(schema, options);
