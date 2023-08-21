@@ -64,7 +64,6 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     @Override
     public InternalRow get() {
         try {
-            LOGGER.info("Acknowledging and committing transaction");
             consumer.ack(currentDelivery.getEnvelope().getDeliveryTag());
         } catch (IOException e) {
             LOGGER.error("Error occurred while acknowledging or committing transaction for delivery: " + currentDelivery, e);

@@ -5,12 +5,13 @@ import org.apache.spark.api.java.Optional;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.Serializable;
 
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
-public class RabbitMQConnectionConfig {
+public class RabbitMQConnectionConfig implements Serializable {
 
     private static final Logger LOG = LoggerFactory.getLogger(RabbitMQConnectionConfig.class);
     private static final long DEFAULT_DELIVERY_TIMEOUT = 30000L;

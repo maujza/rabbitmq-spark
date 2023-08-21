@@ -72,7 +72,6 @@ public class RabbitMQConsumer extends DefaultConsumer {
     public Delivery nextDelivery()
             throws InterruptedException, UnsupportedEncodingException {
         Delivery delivery = queue.take();
-        logger.info("Taken message from the queue: {}", new String(delivery.getBody(), StandardCharsets.UTF_8));
         return handle(delivery);
     }
 

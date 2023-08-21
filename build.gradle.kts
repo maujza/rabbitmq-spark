@@ -51,6 +51,7 @@ dependencies {
     implementation("com.rabbitmq:amqp-client:5.13.1")
     shadow("org.json:json:20230618")
     shadow("com.rabbitmq:amqp-client:5.13.1")
+    shadow("org.apache.commons:commons-pool2:2.10.0")
 
 }
 
