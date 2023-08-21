@@ -1,18 +1,13 @@
 package com.github.maujza.connector;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConsumerCancelledException;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Delivery;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.ShutdownSignalException;
+import com.rabbitmq.client.*;
 import com.rabbitmq.utility.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -26,8 +21,6 @@ public class RabbitMQConsumer extends DefaultConsumer {
     private final Channel channel;
     private volatile ConsumerCancelledException cancelled;
     private static final Delivery POISON = new Delivery(null, null, null);
-    private String taken;
-    private Delivery delivery_taken;
 
     public RabbitMQConsumer(Channel channel) {
         this(channel, Integer.MAX_VALUE);
@@ -39,47 +32,57 @@ public class RabbitMQConsumer extends DefaultConsumer {
         this.queue = new LinkedBlockingQueue<>(capacity);
         logger.info("RabbitMQConsumer initialized with a channel and capacity: {}", capacity);
     }
+
     private void checkShutdown() {
         if (shutdown != null) {
             throw Utility.fixStackTrace(shutdown);
         }
     }
-    private Delivery handle(Delivery delivery) {
-        if (delivery == POISON || delivery == null && (shutdown != null || cancelled != null)) {
-            if (delivery == POISON) {
-                queue.add(POISON);
-                if (shutdown == null && cancelled == null) {
-                    throw new IllegalStateException(
-                            "POISON in queue, but null shutdown and null cancelled. "
-                                    + "This should never happen, please report as a BUG");
-                }
-            }
-            if (null != shutdown) {
-                throw Utility.fixStackTrace(shutdown);
-            }
-            if (null != cancelled) {
-                throw Utility.fixStackTrace(cancelled);
-            }
-        }
 
+    private Delivery handle(Delivery delivery) {
+        if (isPoisonOrInvalidDelivery(delivery)) {
+            handlePoisonOrInvalid(delivery);
+        }
         return delivery;
     }
 
+    private boolean isPoisonOrInvalidDelivery(Delivery delivery) {
+        return delivery == POISON || (delivery == null && (shutdown != null || cancelled != null));
+    }
+
+    private void handlePoisonOrInvalid(Delivery delivery) {
+        if (delivery == POISON) {
+            queue.add(POISON);
+            checkForBug();
+        }
+        if (shutdown != null) {
+            throw Utility.fixStackTrace(shutdown);
+        }
+        if (cancelled != null) {
+            throw Utility.fixStackTrace(cancelled);
+        }
+    }
+
+    private void checkForBug() {
+        if (shutdown == null && cancelled == null) {
+            throw new IllegalStateException("POISON in queue, but null shutdown and null cancelled. This should never happen, please report as a BUG");
+        }
+    }
+
     public Delivery nextDelivery()
-            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException, UnsupportedEncodingException {
-        delivery_taken = queue.take();
-        taken = new String(delivery_taken.getBody(), "UTF-8");
-        logger.info("Taken message from the queue: ", taken);
-        return handle(delivery_taken);
+            throws InterruptedException, UnsupportedEncodingException {
+        Delivery delivery = queue.take();
+        logger.info("Taken message from the queue: {}", new String(delivery.getBody(), StandardCharsets.UTF_8));
+        return handle(delivery);
     }
 
     public Delivery nextDelivery(long timeout)
-            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException {
+            throws InterruptedException {
         return nextDelivery(timeout, TimeUnit.MILLISECONDS);
     }
 
     public Delivery nextDelivery(long timeout, TimeUnit unit)
-            throws InterruptedException, ShutdownSignalException, ConsumerCancelledException {
+            throws InterruptedException {
         return handle(queue.poll(timeout, unit));
     }
 
@@ -96,12 +99,10 @@ public class RabbitMQConsumer extends DefaultConsumer {
     }
 
     @Override
-    public void handleDelivery(
-            String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
         checkShutdown();
         this.queue.add(new Delivery(envelope, properties, body));
-
     }
 
     public void ack(long deliveryTag) throws IOException {
