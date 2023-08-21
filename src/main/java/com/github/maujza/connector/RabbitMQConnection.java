@@ -8,16 +8,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeoutException;
 
 public class RabbitMQConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQConnection.class);
 
     private final RabbitMQConnectionConfig connectionConfig;
-
-    private transient Connection connection;
-
+    private Connection connection;
     private final String queueName;
-    private transient Channel channel;
+    private Channel channel;
 
     public RabbitMQConnection(RabbitMQConnectionConfig connectionConfig, String queueName) {
         this(connectionConfig, queueName, null);
@@ -30,55 +32,48 @@ public class RabbitMQConnection {
         LOGGER.info("Created RabbitMQConnection with queueName: {}, connectionConfig: {}, and connection: {}", queueName, connectionConfig, connection);
     }
 
-    protected ConnectionFactory setupConnectionFactory() throws Exception {
+    protected ConnectionFactory setupConnectionFactory() throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
         LOGGER.debug("Setting up ConnectionFactory");
         return connectionConfig.getConnectionFactory();
     }
 
-    protected Connection setupConnection() throws Exception {
+    protected Connection setupConnection() throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
         LOGGER.debug("Setting up Connection");
         return setupConnectionFactory().newConnection();
     }
 
-    private Channel setupChannel(Connection connection) throws Exception {
+    private Channel setupChannel(Connection connection) throws IOException, TimeoutException {
         LOGGER.debug("Setting up Channel");
         Channel chan = connection.createChannel();
         if (connectionConfig.getPrefetchCount().isPresent()) {
             chan.basicQos(connectionConfig.getPrefetchCount().get(), true);
+        } else {
+            LOGGER.warn("Prefetch count not configured; proceeding without it.");
         }
         return chan;
     }
 
-//    public static void declareQueueDefaults(Channel channel, String queueName) throws IOException {
-//        LOGGER.debug("Declaring queue defaults for queueName: {}", queueName);
-//        channel.queueDeclare(queueName, true, false, false, null);
-//    }
-//
-//    protected void setupQueue() throws IOException {
-//        LOGGER.debug("Setting up Queue");
-//        declareQueueDefaults(channel, queueName);
-//    }
-
     public RabbitMQConsumer getConsumerFromConfiguredChannel() {
         LOGGER.info("Getting configured channel");
-        RabbitMQConsumer consumer = null;
+        RabbitMQConsumer consumer;
         try {
             connection = setupConnection();
             channel = setupChannel(connection);
-            if (channel == null) {
-                throw new RuntimeException("None of RabbitMQ channels are available");
-            }
-
             consumer = new RabbitMQConsumer(channel);
             channel.basicConsume(queueName, false, consumer);
-
-        } catch (Exception e) {
+        } catch (IOException | TimeoutException | URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
             throw new RuntimeException(
                     "Cannot create RMQ connection with "
                             + queueName
                             + " at "
                             + connectionConfig.getHost(),
                     e);
+        } finally {
+            try {
+                closeAll();
+            } catch (IOException e) {
+                LOGGER.error("Error while closing connections or channels for queue: " + queueName, e);
+            }
         }
         return consumer;
     }
@@ -94,9 +89,8 @@ public class RabbitMQConnection {
                 LOGGER.debug("Closing connection");
                 connection.close();
             }
-        } catch (Exception e) {
-            LOGGER.error("Error while closing connections or channels", e);
+        } catch (IOException | TimeoutException e) {
+            LOGGER.error("Error while closing connections or channels for queue: " + queueName, e);
         }
     }
-
 }

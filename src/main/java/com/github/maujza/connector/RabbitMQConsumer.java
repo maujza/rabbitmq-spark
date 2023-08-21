@@ -107,20 +107,4 @@ public class RabbitMQConsumer extends DefaultConsumer {
     public void ack(long deliveryTag) throws IOException {
         this.channel.basicAck(deliveryTag, false);
     }
-
-    public void startTransaction() throws IOException {
-        this.channel.txSelect();
-    }
-
-    public void commitTransaction() throws IOException {
-        this.channel.txCommit();
-    }
-
-    public void rollbackTransaction() throws IOException {
-        this.channel.txRollback();
-    }
-
-    public void printQueueSize() {
-        logger.info("Current queue size: {}", queue.size());
-    }
 }
