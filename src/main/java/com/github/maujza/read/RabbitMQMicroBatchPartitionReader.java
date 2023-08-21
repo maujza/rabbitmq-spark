@@ -1,8 +1,8 @@
 package com.github.maujza.read;
 
 import com.github.maujza.config.RabbitMQConnectionConfig;
-import com.github.maujza.connector.RabbitMQConnection;
-import com.github.maujza.connector.RabbitMQConsumer;
+import com.github.maujza.connection.RabbitMQConnection;
+import com.github.maujza.connection.RabbitMQConsumer;
 import com.github.maujza.schema.RabbitMQMessageToRowConverter;
 import com.github.maujza.schema.SerializableCaseInsensitiveStringMap;
 import com.rabbitmq.client.Delivery;

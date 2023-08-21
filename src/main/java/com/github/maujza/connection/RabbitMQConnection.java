@@ -1,4 +1,4 @@
-package com.github.maujza.connector;
+package com.github.maujza.connection;
 
 import com.github.maujza.config.RabbitMQConnectionConfig;
 import com.rabbitmq.client.Channel;
