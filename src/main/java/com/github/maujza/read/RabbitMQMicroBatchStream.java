@@ -17,7 +17,7 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
     private final StructType schema;
     private final CaseInsensitiveStringMap options;
 
-    private AtomicLong offset; // Initialize this in the constructor.
+    private AtomicLong offset;
 
 
     public RabbitMQMicroBatchStream(StructType schema, CaseInsensitiveStringMap options) {
@@ -42,13 +42,13 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
 
     @Override
     public PartitionReaderFactory createReaderFactory() {
-        LOGGER.info("Creating continuous reader factory");
+        LOGGER.info("Creating micro batch reader factory");
         return new RabbitMQMicroBatchPartitionReaderFactory(schema, options);
     }
 
     @Override
     public Offset initialOffset() {
-        LOGGER.info("RabbitMQ has no concept of offsets, initial offset null");
+        LOGGER.info("RabbitMQ has no concept of offsets, initial offset set to 0");
         return new LongOffset(offset.get());
     }
 
@@ -65,7 +65,7 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
 
     @Override
     public void stop() {
-        LOGGER.info("RabbitMQ continuous stream has stopped");
+        LOGGER.info("RabbitMQ micro batch stream has stopped");
     }
 }
 

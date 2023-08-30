@@ -20,6 +20,7 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     private static final int MAX_MESSAGE_COUNT = 1000;
     private static final String QUEUE_NAME_OPTION = "queue_name";
     private static final String TIME_LIMIT_OPTION = "time_limit";
+    private static final long TIME_LIMIT_MAX = 1000L;
     private static final String MAX_MESSAGES_PER_PARTITION_OPTION = "max_messages_per_partition";
 
     private final RabbitMQConnection connection;
@@ -36,14 +37,26 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
         this.connection = new RabbitMQConnection(connectionConfig, options.get(QUEUE_NAME_OPTION));
         this.consumer = connection.getConsumerFromConfiguredChannel();
-        this.timeLimit = Long.parseLong(options.get(TIME_LIMIT_OPTION));
         this.max_messages_per_partition = options.containsKey(MAX_MESSAGES_PER_PARTITION_OPTION) ?
                 Long.parseLong(options.get(MAX_MESSAGES_PER_PARTITION_OPTION)) : MAX_MESSAGE_COUNT;
+        this.timeLimit = options.containsKey(TIME_LIMIT_OPTION) ?
+                Long.parseLong(options.get(TIME_LIMIT_OPTION)) : TIME_LIMIT_MAX;
         this.startTime = System.currentTimeMillis();
     }
 
     private boolean shouldTerminate(long deliveryTag) {
-        return (System.currentTimeMillis() - startTime) >= timeLimit || deliveryTag > this.max_messages_per_partition;
+        boolean timeExceeded = (System.currentTimeMillis() - startTime) >= timeLimit;
+        boolean maxMessageExceeded = deliveryTag > this.max_messages_per_partition;
+
+        if (timeExceeded) {
+            LOGGER.info("Termination Reason: Time limit exceeded.");
+        }
+
+        if (maxMessageExceeded) {
+            LOGGER.info("Termination Reason: Max messages per partition limit exceeded.");
+        }
+
+        return timeExceeded || maxMessageExceeded;
     }
 
     @Override
