@@ -1,5 +1,6 @@
 package com.github.maujza;
 
+import com.github.maujza.config.ConsumerConfig;
 import com.github.maujza.config.RabbitMQConfig;
 import com.github.maujza.read.RabbitMQScanBuilder;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
@@ -62,7 +63,7 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new RabbitMQScanBuilder(schema, rabbitMQConfig.toConsumerConfig());
+        return new RabbitMQScanBuilder(schema, (ConsumerConfig) rabbitMQConfig.toConsumerConfig().withOptions(options));
     }
 
     @Override

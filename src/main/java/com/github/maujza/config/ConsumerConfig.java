@@ -3,10 +3,12 @@ package com.github.maujza.config;
 import com.github.maujza.connection.RabbitMQConsumer;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -19,16 +21,31 @@ public final class ConsumerConfig extends AbstractRabbitMQConfig {
 
     @Override
     public RabbitMQConfig withOption(String key, String value) {
-        return null;
+        // Create a mutable copy of the existing options
+        Map<String, String> extendedOptions = new HashMap<>(this.getOriginals());
+
+        // Update the single key-value pair
+        extendedOptions.put(key, value);
+
+        // Create a new ConsumerConfig with the updated options
+        return new ConsumerConfig(extendedOptions);
     }
 
     @Override
-    public RabbitMQConfig withOptions(Map<String, String> options) {
-        return null;
+    public RabbitMQConfig withOptions(Map<String, String> newOptions) {
+        // Create a mutable copy of the existing options
+        Map<String, String> extendedOptions = new HashMap<>(this.getOriginals());
+
+        // Merge the new options
+        extendedOptions.putAll(newOptions);
+
+        // Create a new ConsumerConfig with the merged options
+        return new ConsumerConfig(extendedOptions);
     }
 
+
     private Channel setupChannel(Connection connection) throws IOException, TimeoutException, IOException {
-        LOGGER.debug("Setting up Channel");
+        LOGGER.info("Setting up Channel");
         Channel chan = connection.createChannel();
         if (isPrefetchPresent()) {
             chan.basicQos(getPrefetch(), true);
@@ -43,7 +60,11 @@ public final class ConsumerConfig extends AbstractRabbitMQConfig {
         // Create a new channel from the connection
         Channel channel = setupChannel(connection);
 
+        RabbitMQConsumer consumer  = new RabbitMQConsumer(channel);
+
+        channel.basicConsume(getQueueName(), false, consumer);
+
         // Return a new RabbitMQConsumer with the created channel
-        return new RabbitMQConsumer(channel);
+        return consumer;
     }
 }

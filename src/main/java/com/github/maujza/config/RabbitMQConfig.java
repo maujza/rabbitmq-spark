@@ -68,7 +68,7 @@ public interface RabbitMQConfig extends Serializable {
     }
 
     default String getQueueName() {
-        return getOrDefault(QUEUE_NAME_CONFIG, "");
+        return getOrDefault(QUEUE_NAME_CONFIG, "queue_name");
     }
 
     default int getPrefetch() { // Add this method to get the prefetch value

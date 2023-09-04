@@ -1,9 +1,10 @@
 package com.github.maujza.connection;
 
 import com.github.maujza.config.RabbitMQConfig;
-import com.github.maujza.config.RabbitMQConnectionConfig;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -12,6 +13,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeoutException;
 
 public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFactory{
+
+    private static final Logger LOGGER = Logger.getLogger(DefaultRabbitMQConnectionFactory.class.getName());
     private final RabbitMQConfig config;
 
     public DefaultRabbitMQConnectionFactory(RabbitMQConfig rabbitMQConfig) {
@@ -25,6 +28,14 @@ public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFacto
         factory.setVirtualHost(config.getVirtualHost());
         factory.setUsername(config.getUsername());
         factory.setPassword(config.getPassword());
+
+        LOGGER.log(Level.INFO, "Creating ConnectionFactory with the following settings:");
+        LOGGER.log(Level.INFO, "Hostname: " + config.getHostname());
+        LOGGER.log(Level.INFO, "Port: " + config.getPort());
+        LOGGER.log(Level.INFO, "Virtual Host: " + config.getVirtualHost());
+        LOGGER.log(Level.INFO, "Username: " + config.getUsername());
+        LOGGER.log(Level.INFO, "Password: [hidden for security reasons]");
+
         return factory;
     }
 

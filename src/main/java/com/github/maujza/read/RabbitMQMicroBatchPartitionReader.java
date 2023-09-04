@@ -84,6 +84,7 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
 
     @Override
     public void close() throws IOException {
+        consumer.closeAll();
         connection.close();
     }
 }

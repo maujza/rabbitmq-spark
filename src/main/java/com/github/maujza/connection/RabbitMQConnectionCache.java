@@ -2,6 +2,8 @@ package com.github.maujza.connection;
 
 import com.github.maujza.checks.Checks;
 import com.rabbitmq.client.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 
 
 final class RabbitMQConnectionCache {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQConnectionCache.class);
     private final HashMap<RabbitMQConnectionFactory, CachedRabbitMQConnection> cache = new HashMap<>();
     private final long keepAliveMS;
     private final long initialCleanUpDelayMS;
@@ -45,10 +48,12 @@ final class RabbitMQConnectionCache {
                         rabbitMQConnectionFactory,
                         (factory) -> {
                             try {
+                                LOGGER.info("Creating a new connection.");
                                 return new CachedRabbitMQConnection(this, factory.create(), keepAliveMS);
                             } catch (IOException | TimeoutException | URISyntaxException | NoSuchAlgorithmException |
                                      KeyManagementException e) {
-                                throw new RuntimeException(e);
+                                // Log the exception details here before throwing a new RuntimeException
+                                throw new RuntimeException("Failed to create a new connection", e);
                             }
                         })
                 .acquire();
@@ -105,6 +110,7 @@ final class RabbitMQConnectionCache {
 
         private CachedRabbitMQConnection acquire() {
             referenceCount += 1;
+            LOGGER.info("Connection acquired. Current reference count: {}", referenceCount);
             return this;
         }
 
@@ -116,7 +122,7 @@ final class RabbitMQConnectionCache {
         private boolean shouldBeRemoved(final long currentMillis) {
             if (referenceCount == 0 && currentMillis - releasedMillis > keepAliveMS) {
                 try {
-                    wrapped.close((int) currentMillis);
+                    wrapped.close();
                 } catch (RuntimeException | IOException e) {
                     // ignore
                 }
@@ -133,6 +139,7 @@ final class RabbitMQConnectionCache {
                         () -> referenceCount > 0, () -> "Connection reference count cannot be below zero");
                 releasedMillis = System.currentTimeMillis();
                 referenceCount -= 1;
+                LOGGER.info("Connection released back to cache. Current reference count: {}", referenceCount);
             }
         }
 
