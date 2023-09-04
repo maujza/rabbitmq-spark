@@ -29,12 +29,12 @@ public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFacto
         factory.setUsername(config.getUsername());
         factory.setPassword(config.getPassword());
 
-        LOGGER.log(Level.INFO, "Creating ConnectionFactory with the following settings:");
-        LOGGER.log(Level.INFO, "Hostname: " + config.getHostname());
-        LOGGER.log(Level.INFO, "Port: " + config.getPort());
-        LOGGER.log(Level.INFO, "Virtual Host: " + config.getVirtualHost());
-        LOGGER.log(Level.INFO, "Username: " + config.getUsername());
-        LOGGER.log(Level.INFO, "Password: [hidden for security reasons]");
+        LOGGER.log(Level.DEBUG, "Creating ConnectionFactory with the following settings:");
+        LOGGER.log(Level.DEBUG, "Hostname: " + config.getHostname());
+        LOGGER.log(Level.DEBUG, "Port: " + config.getPort());
+        LOGGER.log(Level.DEBUG, "Virtual Host: " + config.getVirtualHost());
+        LOGGER.log(Level.DEBUG, "Username: " + config.getUsername());
+        LOGGER.log(Level.DEBUG, "Password: [hidden for security reasons]");
 
         return factory;
     }
