@@ -2,6 +2,7 @@ package com.github.maujza;
 
 import java.util.Map;
 
+import com.github.maujza.config.RabbitMQConfig;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
@@ -20,7 +21,7 @@ public final class RabbitMQTableProvider implements TableProvider, DataSourceReg
 
     @Override
     public Table getTable(StructType schema, Transform[] transforms, Map<String, String> properties) {
-        return new RabbitMQTable(schema, transforms, properties);
+        return new RabbitMQTable(schema, transforms, RabbitMQConfig.createConfig(properties));
     }
 
     @Override

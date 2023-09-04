@@ -1,10 +1,9 @@
 package com.github.maujza.read;
 
-import com.github.maujza.config.RabbitMQConnectionConfig;
-import com.github.maujza.connection.RabbitMQConnection;
+import com.github.maujza.config.ConsumerConfig;
 import com.github.maujza.connection.RabbitMQConsumer;
 import com.github.maujza.schema.RabbitMQMessageToRowConverter;
-import com.github.maujza.schema.SerializableCaseInsensitiveStringMap;
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Delivery;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -18,12 +17,11 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMicroBatchPartitionReader.class);
     private static final int MAX_MESSAGE_COUNT = 1000;
-    private static final String QUEUE_NAME_OPTION = "queue_name";
     private static final String TIME_LIMIT_OPTION = "time_limit";
     private static final long TIME_LIMIT_MAX = 1000L;
     private static final String MAX_MESSAGES_PER_PARTITION_OPTION = "max_messages_per_partition";
 
-    private final RabbitMQConnection connection;
+    private final Connection connection;
     private final long timeLimit;
     private final long startTime;
     private final long max_messages_per_partition;
@@ -33,14 +31,14 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     private final RabbitMQConsumer consumer;
     private final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter;
 
-    public RabbitMQMicroBatchPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final RabbitMQConnectionConfig connectionConfig, final SerializableCaseInsensitiveStringMap options) {
+    public RabbitMQMicroBatchPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final ConsumerConfig consumerConfig) throws Exception {
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
-        this.connection = new RabbitMQConnection(connectionConfig, options.get(QUEUE_NAME_OPTION));
-        this.consumer = connection.getConsumerFromConfiguredChannel();
-        this.max_messages_per_partition = options.containsKey(MAX_MESSAGES_PER_PARTITION_OPTION) ?
-                Long.parseLong(options.get(MAX_MESSAGES_PER_PARTITION_OPTION)) : MAX_MESSAGE_COUNT;
-        this.timeLimit = options.containsKey(TIME_LIMIT_OPTION) ?
-                Long.parseLong(options.get(TIME_LIMIT_OPTION)) : TIME_LIMIT_MAX;
+        this.connection = consumerConfig.getRabbitMQConnection();
+        this.consumer = consumerConfig.createConsumer(connection);
+        this.max_messages_per_partition = consumerConfig.containsKey(MAX_MESSAGES_PER_PARTITION_OPTION) ?
+                Long.parseLong(consumerConfig.get(MAX_MESSAGES_PER_PARTITION_OPTION)) : MAX_MESSAGE_COUNT;
+        this.timeLimit = consumerConfig.containsKey(TIME_LIMIT_OPTION) ?
+                Long.parseLong(consumerConfig.get(TIME_LIMIT_OPTION)) : TIME_LIMIT_MAX;
         this.startTime = System.currentTimeMillis();
     }
 
@@ -86,6 +84,7 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
 
     @Override
     public void close() throws IOException {
-        connection.closeAll();
+        consumer.closeAll();
+        connection.close();
     }
 }

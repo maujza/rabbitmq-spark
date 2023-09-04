@@ -1,5 +1,7 @@
 package com.github.maujza;
 
+import com.github.maujza.config.ConsumerConfig;
+import com.github.maujza.config.RabbitMQConfig;
 import com.github.maujza.read.RabbitMQScanBuilder;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
 import org.apache.spark.sql.connector.catalog.Table;
@@ -24,14 +26,14 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     private final StructType schema;
     private final Transform[] partitioning;
-    private final Map<String, String> properties;
+    private final RabbitMQConfig rabbitMQConfig;
 
     RabbitMQTable(
-            final StructType schema, final Transform[] partitioning, final Map<String, String> properties) {
+            final StructType schema, final Transform[] partitioning, final RabbitMQConfig rabbitMQConfig) {
         LOGGER.info("Creating RabbitMQTable");
         this.schema = schema;
         this.partitioning = partitioning;
-        this.properties = properties;
+        this.rabbitMQConfig = rabbitMQConfig;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     @Override
     public Map<String, String> properties() {
-        return properties;
+        return rabbitMQConfig.getOriginals();
     }
 
     @Override
@@ -61,7 +63,7 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new RabbitMQScanBuilder(schema, options);
+        return new RabbitMQScanBuilder(schema, (ConsumerConfig) rabbitMQConfig.toConsumerConfig().withOptions(options));
     }
 
     @Override
@@ -75,12 +77,12 @@ public class RabbitMQTable implements Table, SupportsRead {
         final RabbitMQTable that = (RabbitMQTable) o;
         return Objects.equals(schema, that.schema)
                 && Arrays.equals(partitioning, that.partitioning)
-                && Objects.equals(properties, that.properties);
+                && Objects.equals(rabbitMQConfig, that.rabbitMQConfig);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(schema, properties);
+        int result = Objects.hash(schema, rabbitMQConfig);
         result = 31 * result + Arrays.hashCode(partitioning);
         return result;
     }

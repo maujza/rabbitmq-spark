@@ -7,14 +7,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class RabbitMQConsumer extends DefaultConsumer {
 
-    private static final Logger logger = LoggerFactory.getLogger(RabbitMQConsumer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQConsumer.class);
 
     private final BlockingQueue<Delivery> queue;
     private volatile ShutdownSignalException shutdown;
@@ -30,7 +29,7 @@ public class RabbitMQConsumer extends DefaultConsumer {
         super(channel);
         this.channel = channel;
         this.queue = new LinkedBlockingQueue<>(capacity);
-        logger.info("RabbitMQConsumer initialized with a channel and capacity: {}", capacity);
+        LOGGER.info("RabbitMQConsumer initialized with a channel and capacity: {}", capacity);
     }
 
     private void checkShutdown() {
@@ -106,5 +105,17 @@ public class RabbitMQConsumer extends DefaultConsumer {
 
     public void ack(long deliveryTag) throws IOException {
         this.channel.basicAck(deliveryTag, false);
+    }
+
+    public void closeAll() throws IOException {
+        LOGGER.info("Closing channel and returning connection to pool");
+        try {
+            if (this.channel != null && this.channel.isOpen()) {
+                LOGGER.debug("Closing channel");
+                this.channel.close();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error while closing channel: ", e);
+        }
     }
 }
