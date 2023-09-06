@@ -61,6 +61,12 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     public boolean next() throws IOException {
         try {
             currentDelivery = consumer.nextDelivery(timeLimit);
+
+            if (currentDelivery == null) {
+                LOGGER.warn("Received a null delivery. Skipping...");
+                return false;
+            }
+
             if (shouldTerminate(currentDelivery.getEnvelope().getDeliveryTag())) {
                 return false;
             }
