@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
 public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFactory{
@@ -43,5 +44,22 @@ public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFacto
     public Connection create() throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
         ConnectionFactory factory = getConnectionFactory();
         return factory.newConnection();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final DefaultRabbitMQConnectionFactory that = (DefaultRabbitMQConnectionFactory) o;
+        return config.equals(that.config);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(config);
     }
 }
