@@ -3,6 +3,7 @@ package com.github.maujza.config;
 import static java.util.Collections.unmodifiableMap;
 
 import java.util.Map;
+import java.util.Objects;
 
 import com.github.maujza.connection.DefaultRabbitMQConnectionFactory;
 import com.github.maujza.connection.LazyRabbitMQConnectionCache;
@@ -53,6 +54,23 @@ abstract class AbstractRabbitMQConfig implements RabbitMQConfig {
             LOGGER.info("RabbitMQ Connection Factory created: {}", rabbitMQConnectionFactory);
         }
         return rabbitMQConnectionFactory;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final AbstractRabbitMQConfig that = (AbstractRabbitMQConfig) o;
+        return Objects.equals(getOptions(), that.getOptions());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getOptions());
     }
 
 }
