@@ -60,7 +60,7 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
     @Override
     public boolean next() throws IOException {
         try {
-            currentDelivery = consumer.nextDelivery();
+            currentDelivery = consumer.nextDelivery(timeLimit);
             if (shouldTerminate(currentDelivery.getEnvelope().getDeliveryTag())) {
                 return false;
             }
