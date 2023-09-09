@@ -36,16 +36,20 @@ abstract class AbstractRabbitMQConfig implements RabbitMQConfig {
         return caseInsensitiveOptions;
     }
 
-
     @Override
     public Map<String, String> getOriginals() {
         return options;
     }
 
     public Connection getRabbitMQConnection() {
-        Connection connection = LazyRabbitMQConnectionCache.getRabbitMQConnection(getRabbitMQConnectionFactory());
-        LOGGER.info("Obtained RabbitMQ connection: {}", connection);
-        return connection;
+        try {
+            Connection connection = LazyRabbitMQConnectionCache.getRabbitMQConnection(getRabbitMQConnectionFactory());
+            LOGGER.info("Obtained RabbitMQ connection: {}", connection);
+            return connection;
+        } catch (Exception e) {
+            LOGGER.error("Failed to obtain RabbitMQ connection", e);
+            return null; // or throw a custom exception
+        }
     }
 
     private RabbitMQConnectionFactory getRabbitMQConnectionFactory() {
@@ -65,12 +69,13 @@ abstract class AbstractRabbitMQConfig implements RabbitMQConfig {
             return false;
         }
         final AbstractRabbitMQConfig that = (AbstractRabbitMQConfig) o;
-        return Objects.equals(getOptions(), that.getOptions());
+        boolean equals = Objects.equals(getOptions(), that.getOptions());
+        return equals;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getOptions());
+        int hash = Objects.hash(getOptions());
+        return hash;
     }
-
 }

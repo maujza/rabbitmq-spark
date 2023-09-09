@@ -3,7 +3,6 @@ package com.github.maujza.config;
 import com.github.maujza.connection.RabbitMQConsumer;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,14 +12,17 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public final class ConsumerConfig extends AbstractRabbitMQConfig {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Connection.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerConfig.class); // Fixed the class reference
 
     public ConsumerConfig(Map<String, String> options) {
         super(options);
+        LOGGER.info("ConsumerConfig initialized with options: {}", options);
     }
 
     @Override
     public RabbitMQConfig withOption(String key, String value) {
+        LOGGER.info("Updating single option: Key = {}, Value = {}", key, value);
+
         // Create a mutable copy of the existing options
         Map<String, String> extendedOptions = new HashMap<>(this.getOriginals());
 
@@ -33,6 +35,8 @@ public final class ConsumerConfig extends AbstractRabbitMQConfig {
 
     @Override
     public RabbitMQConfig withOptions(Map<String, String> newOptions) {
+        LOGGER.info("Updating multiple options: {}", newOptions);
+
         // Create a mutable copy of the existing options
         Map<String, String> extendedOptions = new HashMap<>(this.getOriginals());
 
@@ -43,11 +47,12 @@ public final class ConsumerConfig extends AbstractRabbitMQConfig {
         return new ConsumerConfig(extendedOptions);
     }
 
+    private Channel setupChannel(Connection connection) throws IOException, TimeoutException {
+        LOGGER.info("Setting up Channel for connection: {}", connection);
 
-    private Channel setupChannel(Connection connection) throws IOException, TimeoutException, IOException {
-        LOGGER.info("Setting up Channel");
         Channel chan = connection.createChannel();
         if (isPrefetchPresent()) {
+            LOGGER.info("Prefetch present, setting prefetch count: {}", getPrefetch());
             chan.basicQos(getPrefetch(), true);
         } else {
             LOGGER.warn("Prefetch count not configured; proceeding without it.");
@@ -56,15 +61,22 @@ public final class ConsumerConfig extends AbstractRabbitMQConfig {
     }
 
     public RabbitMQConsumer createConsumer(Connection connection) throws Exception {
+        LOGGER.info("Creating consumer with connection: {}", connection);
 
-        // Create a new channel from the connection
-        Channel channel = setupChannel(connection);
+        try {
+            // Create a new channel from the connection
+            Channel channel = setupChannel(connection);
 
-        RabbitMQConsumer consumer  = new RabbitMQConsumer(channel);
+            RabbitMQConsumer consumer = new RabbitMQConsumer(channel);
 
-        channel.basicConsume(getQueueName(), false, consumer);
+            LOGGER.info("Consumer created, subscribing to queue: {}", getQueueName());
+            channel.basicConsume(getQueueName(), false, consumer);
 
-        // Return a new RabbitMQConsumer with the created channel
-        return consumer;
+            // Return a new RabbitMQConsumer with the created channel
+            return consumer;
+        } catch (Exception e) {
+            LOGGER.error("Error while creating consumer: ", e);
+            throw e;
+        }
     }
 }

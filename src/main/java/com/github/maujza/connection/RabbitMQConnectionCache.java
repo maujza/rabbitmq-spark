@@ -32,6 +32,8 @@ final class RabbitMQConnectionCache {
 
     RabbitMQConnectionCache(final long keepAliveMS) {
         this(keepAliveMS, INITIAL_CLEANUP_DELAY_MS, CLEANUP_DELAY_MS);
+        LOGGER.info("RabbitMQConnectionCache instantiated with keepAliveMS: {}", keepAliveMS);
+
     }
 
     RabbitMQConnectionCache(
@@ -42,6 +44,7 @@ final class RabbitMQConnectionCache {
     }
 
     synchronized Connection acquire(final RabbitMQConnectionFactory rabbitMQConnectionFactory) {
+        LOGGER.info("Acquiring connection for factory: {}", rabbitMQConnectionFactory);
         ensureScheduler();
         return cache
                 .computeIfAbsent(
@@ -60,6 +63,7 @@ final class RabbitMQConnectionCache {
     }
 
     synchronized void shutdown() throws RuntimeException {
+        LOGGER.info("Initiating shutdown of RabbitMQConnectionCache");
         if (scheduler != null) {
             scheduler.shutdownNow();
             cache.values().forEach(connection -> {
@@ -73,21 +77,26 @@ final class RabbitMQConnectionCache {
             cache.clear();
             scheduler = null;
         }
+        LOGGER.info("Successfully shutdown RabbitMQConnectionCache");
     }
 
     private synchronized void checkClientCache() {
+        LOGGER.debug("Checking client cache for stale entries");
         long currentTimeMillis = System.currentTimeMillis();
         cache.entrySet().removeIf(e -> e.getValue().shouldBeRemoved(currentTimeMillis));
         if (cache.entrySet().isEmpty()) {
             shutdown();
         }
+        LOGGER.debug("Client cache check completed");
     }
 
     private synchronized void ensureScheduler() {
         if (scheduler == null) {
+            LOGGER.info("Initializing scheduler");
             scheduler = Executors.newScheduledThreadPool(1);
             scheduler.scheduleWithFixedDelay(
                     this::checkClientCache, initialCleanUpDelayMS, cleanUpDelayMS, TimeUnit.MILLISECONDS);
+            LOGGER.info("Scheduler initialized successfully");
         }
     }
 
@@ -106,6 +115,8 @@ final class RabbitMQConnectionCache {
             this.keepAliveMS = keepAliveMS;
             this.releasedMillis = System.currentTimeMillis();
             this.referenceCount = 0;
+            LOGGER.info("CachedRabbitMQConnection created with keepAliveMS: {}", keepAliveMS);
+
         }
 
         private CachedRabbitMQConnection acquire() {
@@ -115,12 +126,15 @@ final class RabbitMQConnectionCache {
         }
 
         private void shutdownClose() throws IOException {
+            LOGGER.info("Initiating shutdown close of CachedRabbitMQConnection");
             referenceCount = 0;
             wrapped.close();
+            LOGGER.info("CachedRabbitMQConnection closed successfully");
         }
 
         private boolean shouldBeRemoved(final long currentMillis) {
             if (referenceCount == 0 && currentMillis - releasedMillis > keepAliveMS) {
+                LOGGER.debug("Removing connection due to inactivity");
                 try {
                     wrapped.close();
                 } catch (RuntimeException | IOException e) {
@@ -133,6 +147,7 @@ final class RabbitMQConnectionCache {
 
         @Override
         public void close() {
+            LOGGER.info("Releasing CachedRabbitMQConnection back to cache");
             synchronized (cache) {
                 cache.ensureScheduler();
                 Checks.ensureState(

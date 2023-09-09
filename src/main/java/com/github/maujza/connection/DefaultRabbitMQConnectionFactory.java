@@ -3,8 +3,8 @@ package com.github.maujza.connection;
 import com.github.maujza.config.RabbitMQConfig;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -13,13 +13,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
-public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFactory{
+public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFactory {
 
-    private static final Logger LOGGER = Logger.getLogger(DefaultRabbitMQConnectionFactory.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRabbitMQConnectionFactory.class);
     private final RabbitMQConfig config;
 
     public DefaultRabbitMQConnectionFactory(RabbitMQConfig rabbitMQConfig) {
         this.config = rabbitMQConfig;
+        LOGGER.info("DefaultRabbitMQConnectionFactory initialized with configuration: {}", config.getOptions());
     }
 
     public ConnectionFactory getConnectionFactory() throws URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
@@ -30,20 +31,23 @@ public class DefaultRabbitMQConnectionFactory implements RabbitMQConnectionFacto
         factory.setUsername(config.getUsername());
         factory.setPassword(config.getPassword());
 
-        LOGGER.log(Level.DEBUG, "Creating ConnectionFactory with the following settings:");
-        LOGGER.log(Level.DEBUG, "Hostname: " + config.getHostname());
-        LOGGER.log(Level.DEBUG, "Port: " + config.getPort());
-        LOGGER.log(Level.DEBUG, "Virtual Host: " + config.getVirtualHost());
-        LOGGER.log(Level.DEBUG, "Username: " + config.getUsername());
-        LOGGER.log(Level.DEBUG, "Password: [hidden for security reasons]");
+        LOGGER.debug("Creating ConnectionFactory with the following settings:");
+        LOGGER.debug("Hostname: {}", config.getHostname());
+        LOGGER.debug("Port: {}", config.getPort());
+        LOGGER.debug("Virtual Host: {}", config.getVirtualHost());
+        LOGGER.debug("Username: {}", config.getUsername());
+        LOGGER.debug("Password: [hidden for security reasons]");
 
         return factory;
     }
 
     @Override
     public Connection create() throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
+        LOGGER.info("Creating a new RabbitMQ Connection");
         ConnectionFactory factory = getConnectionFactory();
-        return factory.newConnection();
+        Connection connection = factory.newConnection();
+        LOGGER.info("Successfully created a new RabbitMQ Connection: {}", connection);
+        return connection;
     }
 
     @Override

@@ -15,11 +15,10 @@ public final class LazyRabbitMQConnectionCache {
     static {
         int keepAliveMS = 5000;
         try {
-            keepAliveMS =
-                    Integer.parseInt(System.getProperty(SYSTEM_RABBITMQ_CACHE_KEEP_ALIVE_MS_PROPERTY, "5000"));
+            keepAliveMS = Integer.parseInt(System.getProperty(SYSTEM_RABBITMQ_CACHE_KEEP_ALIVE_MS_PROPERTY, "5000"));
             LOGGER.info("Using keepAliveMS value from system properties: {}", keepAliveMS);
         } catch (NumberFormatException e) {
-            LOGGER.warn("Invalid format for keepAliveMS in system properties, using default value: {}", keepAliveMS, e);
+            LOGGER.warn("Invalid format for keepAliveMS in system properties, using default value: {}. Exception: {}", keepAliveMS, e.getMessage());
         }
 
         CLIENT_CACHE = new RabbitMQConnectionCache(keepAliveMS);
@@ -27,8 +26,17 @@ public final class LazyRabbitMQConnectionCache {
     }
 
     public static Connection getRabbitMQConnection(final RabbitMQConnectionFactory rabbitMQConnectionFactory) {
-        LOGGER.info("Acquiring RabbitMQ connection using factory: {}", rabbitMQConnectionFactory);
-        return CLIENT_CACHE.acquire(rabbitMQConnectionFactory);
+        LOGGER.info("Attempting to acquire a RabbitMQ connection using factory: {}", rabbitMQConnectionFactory);
+
+        Connection connection = CLIENT_CACHE.acquire(rabbitMQConnectionFactory);
+
+        if(connection != null) {
+            LOGGER.info("Successfully acquired a RabbitMQ connection: {}", connection);
+        } else {
+            LOGGER.warn("Failed to acquire a RabbitMQ connection");
+        }
+
+        return connection;
     }
 
     private LazyRabbitMQConnectionCache() {

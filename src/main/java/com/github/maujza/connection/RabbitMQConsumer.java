@@ -34,6 +34,7 @@ public class RabbitMQConsumer extends DefaultConsumer {
 
     private void checkShutdown() {
         if (shutdown != null) {
+            LOGGER.warn("Shutdown signal detected. Throwing ShutdownSignalException");
             throw Utility.fixStackTrace(shutdown);
         }
     }
@@ -86,12 +87,14 @@ public class RabbitMQConsumer extends DefaultConsumer {
 
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
+        LOGGER.warn("Received shutdown signal with consumerTag: {}", consumerTag);
         shutdown = sig;
         queue.add(POISON);
     }
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
+        LOGGER.warn("Consumer cancelled with consumerTag: {}", consumerTag);
         cancelled = new ConsumerCancelledException();
         queue.add(POISON);
     }
@@ -99,11 +102,13 @@ public class RabbitMQConsumer extends DefaultConsumer {
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
+        LOGGER.debug("Handling delivery with consumerTag: {}, Envelope: {}, Properties: {}", consumerTag, envelope, properties);
         checkShutdown();
         this.queue.add(new Delivery(envelope, properties, body));
     }
 
     public void ack(long deliveryTag) throws IOException {
+        LOGGER.debug("Acknowledging message with deliveryTag: {}", deliveryTag);
         this.channel.basicAck(deliveryTag, false);
     }
 
@@ -118,4 +123,5 @@ public class RabbitMQConsumer extends DefaultConsumer {
             LOGGER.error("Error while closing channel: ", e);
         }
     }
+
 }

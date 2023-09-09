@@ -16,20 +16,18 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMicroBatchStream.class);
     private final StructType schema;
     private final ConsumerConfig options;
-
     private AtomicLong offset;
-
 
     public RabbitMQMicroBatchStream(StructType schema, ConsumerConfig options) {
         this.schema = schema;
         this.options = options;
         this.offset = new AtomicLong(0);
-
+        LOGGER.info("Initialized RabbitMQMicroBatchStream with given schema and options");
     }
 
     @Override
     public InputPartition[] planInputPartitions(Offset start, Offset end) {
-        LOGGER.info("Planning input partitions with no offsets");
+        LOGGER.info("Planning input partitions from {} to {}", start, end);
         return new InputPartition[] {
                 new RabbitMQInputPartition(0)
         };
@@ -37,7 +35,9 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
 
     @Override
     public Offset latestOffset() {
-        return new LongOffset(offset.getAndAdd(1000));
+        Offset newOffset = new LongOffset(offset.getAndAdd(1000));
+        LOGGER.info("Latest offset set to {}", newOffset);
+        return newOffset;
     }
 
     @Override
@@ -48,19 +48,20 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
 
     @Override
     public Offset initialOffset() {
-        LOGGER.info("RabbitMQ has no concept of offsets, initial offset set to 0");
-        return new LongOffset(offset.get());
+        Offset initial = new LongOffset(offset.get());
+        LOGGER.info("Initial dummy offset set to {}", initial);
+        return initial;
     }
 
     @Override
     public Offset deserializeOffset(String s) {
-        LOGGER.info("RabbitMQ has no concept of offsets, attempted to deserialize: {}", s);
+        LOGGER.warn("RabbitMQ has no concept of offsets, attempted to deserialize: {}", s);
         return null;
     }
 
     @Override
     public void commit(Offset offset) {
-        LOGGER.info("RabbitMQ has no concept of offsets, attempted to commit: {}", offset);
+        LOGGER.warn("RabbitMQ has no concept of offsets, attempted to commit: {}", offset);
     }
 
     @Override
@@ -68,4 +69,5 @@ public class RabbitMQMicroBatchStream implements MicroBatchStream {
         LOGGER.info("RabbitMQ micro batch stream has stopped");
     }
 }
+
 

@@ -3,6 +3,8 @@ package com.github.maujza.config;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The RabbitMQConfig interface.
@@ -11,15 +13,20 @@ import java.util.Locale;
  */
 public interface RabbitMQConfig extends Serializable {
 
+    Logger LOGGER = LoggerFactory.getLogger(RabbitMQConfig.class);
+
     static RabbitMQConfig createConfig(final Map<String, String> options) {
+        LOGGER.info("Creating a new general RabbitMQConfig with options: {}", options);
         return new SimpleRabbitMQConfig(options);
     }
 
     static ConsumerConfig consumerConfig(final Map<String, String> options) {
+        LOGGER.info("Creating a new ConsumerConfig with options: {}", options);
         return new ConsumerConfig(options);
     }
 
     static ProducerConfig producerConfig(final Map<String, String> options) {
+        LOGGER.info("Creating a new ProducerConfig with options: {}", options);
         return new ProducerConfig(options);
     }
 
@@ -112,11 +119,15 @@ public interface RabbitMQConfig extends Serializable {
     default int getInt(final String key, final int defaultValue) {
         String value = get(key);
         if (value == null) {
+            LOGGER.warn("Configuration key {} is not set. Using the default value: {}", key, defaultValue);
             return defaultValue;
         } else {
             try {
-                return Integer.parseInt(value);
+                int intValue = Integer.parseInt(value);
+                LOGGER.info("Parsed integer value for key {}: {}", key, intValue);
+                return intValue;
             } catch (NumberFormatException e) {
+                LOGGER.error("Configuration key {} did not contain a valid int, got: {}. Falling back to default value: {}", key, value, defaultValue);
                 throw new IllegalArgumentException(key + " did not contain a valid int, got: " + value);
             }
         }
