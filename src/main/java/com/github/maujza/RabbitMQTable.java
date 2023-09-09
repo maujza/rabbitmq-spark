@@ -30,7 +30,7 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     RabbitMQTable(
             final StructType schema, final Transform[] partitioning, final RabbitMQConfig rabbitMQConfig) {
-        LOGGER.info("Creating RabbitMQTable");
+        LOGGER.info("Initializing RabbitMQTable with given schema, partitioning, and RabbitMQ configuration.");
         this.schema = schema;
         this.partitioning = partitioning;
         this.rabbitMQConfig = rabbitMQConfig;
@@ -38,31 +38,37 @@ public class RabbitMQTable implements Table, SupportsRead {
 
     @Override
     public String name() {
+        LOGGER.debug("Retrieving table name, which is null in this case.");
         return null;
     }
 
     @Override
     public Transform[] partitioning() {
+        LOGGER.debug("Retrieving partitioning information.");
         return partitioning;
     }
 
     @Override
     public Map<String, String> properties() {
+        LOGGER.debug("Retrieving RabbitMQ table properties.");
         return rabbitMQConfig.getOriginals();
     }
 
     @Override
     public StructType schema() {
+        LOGGER.debug("Retrieving schema information for the RabbitMQ table.");
         return schema;
     }
 
     @Override
     public Set<TableCapability> capabilities() {
+        LOGGER.debug("Retrieving table capabilities.");
         return TABLE_CAPABILITY_SET;
     }
 
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
+        LOGGER.info("Creating new RabbitMQScanBuilder with given options.");
         return new RabbitMQScanBuilder(schema, (ConsumerConfig) rabbitMQConfig.toConsumerConfig().withOptions(options));
     }
 
