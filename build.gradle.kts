@@ -52,6 +52,13 @@ dependencies {
     shadow("org.json:json:20230618")
     shadow("com.rabbitmq:amqp-client:5.13.1")
     shadow("org.apache.commons:commons-pool2:2.10.0")
+    // JUnit Jupiter (JUnit 5) dependencies for testing
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
+
+    // Mockito for mocking
+    testImplementation("org.mockito:mockito-junit-jupiter:3.12.4")
 
 }
 
@@ -75,6 +82,13 @@ tasks.register<Jar>("sourcesJar") {
     from(sourceSets.main.get().allSource)
     archiveClassifier.set("sources")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 
