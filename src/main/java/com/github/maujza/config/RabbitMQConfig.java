@@ -16,17 +16,17 @@ public interface RabbitMQConfig extends Serializable {
     Logger LOGGER = LoggerFactory.getLogger(RabbitMQConfig.class);
 
     static RabbitMQConfig createConfig(final Map<String, String> options) {
-        LOGGER.info("Creating a new general RabbitMQConfig with options: {}", options);
+        LOGGER.debug("Creating a new general RabbitMQConfig with options: {}", options);
         return new SimpleRabbitMQConfig(options);
     }
 
     static ConsumerConfig consumerConfig(final Map<String, String> options) {
-        LOGGER.info("Creating a new ConsumerConfig with options: {}", options);
+        LOGGER.debug("Creating a new ConsumerConfig with options: {}", options);
         return new ConsumerConfig(options);
     }
 
     static ProducerConfig producerConfig(final Map<String, String> options) {
-        LOGGER.info("Creating a new ProducerConfig with options: {}", options);
+        LOGGER.debug("Creating a new ProducerConfig with options: {}", options);
         return new ProducerConfig(options);
     }
 
@@ -34,7 +34,7 @@ public interface RabbitMQConfig extends Serializable {
 
     String PORT_CONFIG = "port";
 
-    String VIRTUAL_HOST_CONFIG = "virtualHost";
+    String VIRTUAL_HOST_CONFIG = "virtual_host";
 
     String USERNAME_CONFIG = "username";
 

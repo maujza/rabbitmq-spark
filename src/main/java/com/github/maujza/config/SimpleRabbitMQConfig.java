@@ -13,7 +13,7 @@ public class SimpleRabbitMQConfig implements RabbitMQConfig {
 
     SimpleRabbitMQConfig(final Map<String, String> options) {
         this.options = options;
-        LOGGER.info("SimpleRabbitMQConfig initialized with options: {}", options);
+        LOGGER.debug("SimpleRabbitMQConfig initialized with options: {}", options);
     }
 
     @Override

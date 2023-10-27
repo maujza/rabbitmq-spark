@@ -33,13 +33,29 @@ public class RabbitMQMicroBatchPartitionReader implements PartitionReader<Intern
 
     public RabbitMQMicroBatchPartitionReader(final RabbitMQMessageToRowConverter rabbitMQMessageToRowConverter, final ConsumerConfig consumerConfig) throws Exception {
         this.rabbitMQMessageToRowConverter = rabbitMQMessageToRowConverter;
-        this.connection = consumerConfig.getRabbitMQConnection();
-        this.consumer = consumerConfig.createConsumer(connection);
-        this.max_messages_per_partition = consumerConfig.containsKey(MAX_MESSAGES_PER_PARTITION_OPTION) ?
-                Long.parseLong(consumerConfig.get(MAX_MESSAGES_PER_PARTITION_OPTION)) : MAX_MESSAGE_COUNT;
-        this.timeLimit = consumerConfig.containsKey(TIME_LIMIT_OPTION) ?
-                Long.parseLong(consumerConfig.get(TIME_LIMIT_OPTION)) : TIME_LIMIT_MAX;
+        this.connection = initializeOrGetConnection(consumerConfig);
+        this.consumer = initializeConsumer(consumerConfig);
+        this.max_messages_per_partition = fetchMaxMessagesPerPartition(consumerConfig);
+        this.timeLimit = fetchTimeLimit(consumerConfig);
         this.startTime = System.currentTimeMillis();
+    }
+
+    private Connection initializeOrGetConnection(final ConsumerConfig consumerConfig) {
+        return consumerConfig.getRabbitMQConnection();
+    }
+
+    private RabbitMQConsumer initializeConsumer(final ConsumerConfig consumerConfig) throws Exception {
+        return consumerConfig.createConsumer(connection);
+    }
+
+    private long fetchMaxMessagesPerPartition(final ConsumerConfig consumerConfig) {
+        return consumerConfig.containsKey(MAX_MESSAGES_PER_PARTITION_OPTION) ?
+                Long.parseLong(consumerConfig.get(MAX_MESSAGES_PER_PARTITION_OPTION)) : MAX_MESSAGE_COUNT;
+    }
+
+    private long fetchTimeLimit(final ConsumerConfig consumerConfig) {
+        return consumerConfig.containsKey(TIME_LIMIT_OPTION) ?
+                Long.parseLong(consumerConfig.get(TIME_LIMIT_OPTION)) : TIME_LIMIT_MAX;
     }
 
     private boolean shouldTerminate(long deliveryTag) {

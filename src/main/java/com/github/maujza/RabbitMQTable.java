@@ -69,7 +69,7 @@ public class RabbitMQTable implements Table, SupportsRead {
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
         LOGGER.info("Creating new RabbitMQScanBuilder with given options.");
-        return new RabbitMQScanBuilder(schema, (ConsumerConfig) rabbitMQConfig.toConsumerConfig().withOptions(options));
+        return new RabbitMQScanBuilder(schema, rabbitMQConfig.toConsumerConfig().withOptions(options.asCaseSensitiveMap()));
     }
 
     @Override

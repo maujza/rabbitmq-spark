@@ -16,7 +16,7 @@ public final class ConsumerConfig extends AbstractRabbitMQConfig {
 
     public ConsumerConfig(Map<String, String> options) {
         super(options);
-        LOGGER.info("ConsumerConfig initialized with options: {}", options);
+        LOGGER.debug("ConsumerConfig initialized with options: {}", options);
     }
 
     @Override
@@ -34,7 +34,7 @@ public final class ConsumerConfig extends AbstractRabbitMQConfig {
     }
 
     @Override
-    public RabbitMQConfig withOptions(Map<String, String> newOptions) {
+    public ConsumerConfig withOptions(Map<String, String> newOptions) {
         LOGGER.info("Updating multiple options: {}", newOptions);
 
         // Create a mutable copy of the existing options

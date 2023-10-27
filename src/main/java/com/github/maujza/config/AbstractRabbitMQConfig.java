@@ -24,7 +24,7 @@ abstract class AbstractRabbitMQConfig implements RabbitMQConfig {
 
     AbstractRabbitMQConfig(final Map<String, String> originals) {
         this.options = unmodifiableMap(originals);
-        LOGGER.info("Initialized with options: {}", originals);
+        LOGGER.debug("Initialized with options: {}", originals);
     }
 
     @Override
@@ -69,8 +69,7 @@ abstract class AbstractRabbitMQConfig implements RabbitMQConfig {
             return false;
         }
         final AbstractRabbitMQConfig that = (AbstractRabbitMQConfig) o;
-        boolean equals = Objects.equals(getOptions(), that.getOptions());
-        return equals;
+        return Objects.equals(getOptions(), that.getOptions());
     }
 
     @Override
