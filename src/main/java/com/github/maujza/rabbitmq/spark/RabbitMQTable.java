@@ -1,15 +1,14 @@
-package com.github.maujza;
+package com.github.maujza.rabbitmq.spark;
 
-import com.github.maujza.config.ConsumerConfig;
-import com.github.maujza.config.RabbitMQConfig;
-import com.github.maujza.read.RabbitMQScanBuilder;
+
+import com.github.maujza.rabbitmq.spark.read.RabbitMQStreamScanBuilder;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableCapability;
 import org.apache.spark.sql.connector.expressions.Transform;
+import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
-import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,26 +19,28 @@ public class RabbitMQTable implements Table, SupportsRead {
     private static final Set<TableCapability> TABLE_CAPABILITY_SET = new HashSet<>();
 
     static {
-        TABLE_CAPABILITY_SET.add(TableCapability.CONTINUOUS_READ);
         TABLE_CAPABILITY_SET.add(TableCapability.MICRO_BATCH_READ);
     }
 
     private final StructType schema;
     private final Transform[] partitioning;
-    private final RabbitMQConfig rabbitMQConfig;
+    private final Map<String, String> properties;
 
     RabbitMQTable(
-            final StructType schema, final Transform[] partitioning, final RabbitMQConfig rabbitMQConfig) {
+            final StructType schema, final Transform[] partitioning, final Map<String, String> properties) {
         LOGGER.info("Initializing RabbitMQTable with given schema, partitioning, and RabbitMQ configuration.");
         this.schema = schema;
         this.partitioning = partitioning;
-        this.rabbitMQConfig = rabbitMQConfig;
+        this.properties = properties;
     }
 
     @Override
     public String name() {
         LOGGER.debug("Retrieving table name, which is null in this case.");
-        return null;
+        if (properties.containsKey("stream")) {
+            return "RabbitMQStreamTable("+properties.get("stream")+")";
+        }
+        return "RabbitMQStreamTable()";
     }
 
     @Override
@@ -51,7 +52,7 @@ public class RabbitMQTable implements Table, SupportsRead {
     @Override
     public Map<String, String> properties() {
         LOGGER.debug("Retrieving RabbitMQ table properties.");
-        return rabbitMQConfig.getOriginals();
+        return properties;
     }
 
     @Override
@@ -69,7 +70,7 @@ public class RabbitMQTable implements Table, SupportsRead {
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
         LOGGER.info("Creating new RabbitMQScanBuilder with given options.");
-        return new RabbitMQScanBuilder(schema, rabbitMQConfig.toConsumerConfig().withOptions(options.asCaseSensitiveMap()));
+        return new RabbitMQStreamScanBuilder(schema, properties);
     }
 
     @Override
@@ -83,12 +84,12 @@ public class RabbitMQTable implements Table, SupportsRead {
         final RabbitMQTable that = (RabbitMQTable) o;
         return Objects.equals(schema, that.schema)
                 && Arrays.equals(partitioning, that.partitioning)
-                && Objects.equals(rabbitMQConfig, that.rabbitMQConfig);
+                && Objects.equals(properties, that.properties);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(schema, rabbitMQConfig);
+        int result = Objects.hash(schema, properties);
         result = 31 * result + Arrays.hashCode(partitioning);
         return result;
     }

@@ -1,1 +1,1 @@
-rootProject.name = "rabbitmq-connector"
+rootProject.name = "rabbitmq-spark"

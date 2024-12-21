@@ -1,5 +1,4 @@
-package com.github.maujza.schema;
-
+package com.github.maujza.rabbitmq.spark.schema;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,7 +10,6 @@ import org.apache.spark.unsafe.types.UTF8String;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +33,17 @@ public class RabbitMQMessageToRowConverter implements Serializable {
             case "string":
                 return UTF8String.fromString(jsonValue.toString());
             case "integer":
-                return Integer.parseInt(jsonValue.toString());
+                try {
+                    return Integer.parseInt(jsonValue.toString());
+                } catch (NumberFormatException e) {
+                    return null; // or a default value like 0
+                }
             case "double":
-                return Double.parseDouble(jsonValue.toString());
+                try {
+                    return Double.parseDouble(jsonValue.toString());
+                } catch (NumberFormatException e) {
+                    return Double.NaN; // or null
+                }
             case "boolean":
                 return Boolean.parseBoolean(jsonValue.toString());
             case "timestamp":
@@ -49,11 +55,11 @@ public class RabbitMQMessageToRowConverter implements Serializable {
             case "array":
                 List<?> jsonList = (List<?>) jsonValue;
                 ArrayType arrayType = (ArrayType) dataType;
-                List<Object> convertedList = new ArrayList<>();
-                for (Object elem : jsonList) {
-                    convertedList.add(convertField(elem, arrayType.elementType()));
+                Object[] convertedArray = new Object[jsonList.size()];
+                for (int i = 0; i < jsonList.size(); i++) {
+                    convertedArray[i] = convertField(jsonList.get(i), arrayType.elementType());
                 }
-                return convertedList.toArray();
+                return convertedArray;
             case "map":
                 Map<?, ?> jsonMap = (Map<?, ?>) jsonValue;
                 MapType mapType = (MapType) dataType;
